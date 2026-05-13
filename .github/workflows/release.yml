@@ -1,0 +1,118 @@
+name: Release
+
+# Runs when a tag like v1.0.0 / v0.9.11 is pushed.
+#   git tag v0.9.11
+#   git push --tags
+# The job:
+#   1. Verifies the tag version matches CMC_CLONER_VERSION in cmc-cloner.php
+#      (catches the "forgot to bump version header" footgun).
+#   2. Builds a clean ZIP named cmc-cloner-<version>.zip with the plugin
+#      folder as its top-level directory — exactly the shape WP's
+#      installer expects.
+#   3. Publishes a GitHub Release using the tag, with the ZIP attached
+#      as a release asset and the commit messages since the previous tag
+#      as auto-generated release notes.
+#
+# The plugin's self-updater (includes/class-updater.php) reads
+# `releases/latest` from this repo's GitHub API, finds the .zip asset
+# produced here, and feeds it into WP's plugin-update transient.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # required to create the release + upload assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so release-notes auto-generation can diff
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          # Strip the leading "v" from refs/tags/vX.Y.Z
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"           >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"   >> "$GITHUB_OUTPUT"
+          echo "Building release for $TAG (version $VERSION)"
+
+      - name: Verify version header matches tag
+        run: |
+          HEADER_VERSION=$(grep -E '^\s*\*\s*Version:\s*' cmc-cloner.php | head -1 | sed -E 's/.*Version:\s*//' | tr -d '[:space:]')
+          CONST_VERSION=$(grep -E "define\(\s*'CMC_CLONER_VERSION'" cmc-cloner.php | sed -E "s/.*'CMC_CLONER_VERSION',\s*'([^']+)'.*/\1/")
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+
+          echo "Plugin header version: $HEADER_VERSION"
+          echo "PHP constant version:  $CONST_VERSION"
+          echo "Git tag version:       $TAG_VERSION"
+
+          if [ "$HEADER_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Plugin header Version ($HEADER_VERSION) does not match tag ($TAG_VERSION). Bump it in cmc-cloner.php before tagging."
+            exit 1
+          fi
+          if [ "$CONST_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::CMC_CLONER_VERSION constant ($CONST_VERSION) does not match tag ($TAG_VERSION). Bump it in cmc-cloner.php before tagging."
+            exit 1
+          fi
+
+      - name: Build release ZIP
+        id: build
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SLUG="cmc-cloner"
+          ZIP_NAME="${SLUG}-${VERSION}.zip"
+
+          # Stage the plugin in a folder named exactly after its slug so
+          # the ZIP unpacks to "cmc-cloner/" — what WP's installer + our
+          # updater's source-folder rename hook both expect.
+          STAGE_DIR=$(mktemp -d)
+          mkdir -p "$STAGE_DIR/$SLUG"
+
+          # Rsync everything except development / CI / OS junk into the
+          # staged plugin folder. Keep this list aligned with .gitignore.
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='.DS_Store' \
+            --exclude='*.swp' \
+            --exclude='.idea' \
+            --exclude='.vscode' \
+            --exclude='.claude' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='build' \
+            --exclude='dist' \
+            --exclude='*.zip' \
+            --exclude='*.log' \
+            --exclude='debug.log' \
+            --exclude='error_log' \
+            --exclude='*.bak' \
+            --exclude='README.md' \
+            --exclude='CHANGELOG.md' \
+            ./ "$STAGE_DIR/$SLUG/"
+
+          # Zip from the staging dir so the archive's top-level entry
+          # is "cmc-cloner/" (not "./cmc-cloner/" or "<stage_uuid>/").
+          (cd "$STAGE_DIR" && zip -rq "$GITHUB_WORKSPACE/$ZIP_NAME" "$SLUG")
+
+          echo "zip_name=$ZIP_NAME"       >> "$GITHUB_OUTPUT"
+          echo "zip_path=$GITHUB_WORKSPACE/$ZIP_NAME" >> "$GITHUB_OUTPUT"
+          ls -la "$GITHUB_WORKSPACE/$ZIP_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true  # auto-build "What's Changed" from commits since previous tag
+          files: ${{ steps.build.outputs.zip_path }}
+          fail_on_unmatched_files: true

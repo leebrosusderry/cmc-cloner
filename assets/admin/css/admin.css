@@ -1,0 +1,1857 @@
+/* ---------- CMC Cloner — Admin styles ---------- */
+
+.cmc-wrap {
+    max-width: 980px;
+}
+
+.cmc-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px !important;
+}
+
+.cmc-brand-dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+}
+
+.cmc-notice {
+    margin-top: 10px !important;
+}
+
+.cmc-row-id {
+    color: #888;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+/* ---------- Card ---------- */
+
+.cmc-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    margin: 18px 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.cmc-card__header {
+    padding: 16px 22px;
+    border-bottom: 1px solid #f0f0f1;
+    background: #fafafa;
+}
+
+.cmc-card__header h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.cmc-card__header .description {
+    margin: 0;
+    color: #646970;
+    font-size: 13px;
+}
+
+.cmc-card__body {
+    padding: 4px 22px 14px;
+}
+
+.cmc-card__body .form-table th {
+    padding-left: 0;
+    width: 230px;
+}
+
+.cmc-card__body .form-table code {
+    font-size: 12px;
+    background: #f6f7f7;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+/* ---------- Switch ---------- */
+
+.cmc-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cmc-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cmc-switch__track {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    background: #c3c4c7;
+    border-radius: 24px;
+    transition: background 0.15s ease;
+    flex: 0 0 auto;
+}
+
+.cmc-switch__track::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.cmc-switch input:checked + .cmc-switch__track {
+    background: #2271b1;
+}
+
+.cmc-switch input:checked + .cmc-switch__track::before {
+    transform: translateX(18px);
+}
+
+.cmc-switch input:focus-visible + .cmc-switch__track {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.cmc-switch__text {
+    color: #50575e;
+    font-size: 13px;
+}
+
+/* ---------- Provider rows (hidden by default — JS reveals active) ---------- */
+
+.cmc-provider-row {
+    display: none;
+}
+
+.cmc-provider-row.is-active {
+    display: table-row;
+}
+
+/* ---------- Submit button ---------- */
+
+.cmc-wrap .button-hero {
+    padding: 6px 24px !important;
+    font-size: 14px !important;
+    height: auto !important;
+}
+
+/* ---------- Test API result ---------- */
+
+.cmc-test-result {
+    margin-left: 10px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.cmc-test-result.is-loading {
+    color: #646970;
+}
+
+.cmc-test-result.is-success {
+    color: #008a20;
+    font-weight: 500;
+}
+
+.cmc-test-result.is-error {
+    color: #b32d2e;
+    font-weight: 500;
+}
+
+/* ---------- Variables list (Prompts page) ---------- */
+
+.cmc-vars {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px 16px;
+    margin: 0;
+}
+
+.cmc-vars li {
+    margin: 0;
+    font-size: 13px;
+}
+
+.cmc-vars code {
+    display: inline-block;
+    min-width: 160px;
+    margin-right: 8px;
+}
+
+.cmc-vars span {
+    color: #50575e;
+}
+
+/* ---------- Prompts tabs ---------- */
+
+.cmc-prompts {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+    margin-top: 18px;
+    align-items: flex-start;
+}
+
+.cmc-prompts__nav {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: sticky;
+    top: 46px;
+}
+
+.cmc-prompts__nav-item {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e1e1e;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.cmc-prompts__nav-item:hover {
+    background: #f6f7f7;
+}
+
+.cmc-prompts__nav-item.is-active {
+    background: #2271b1;
+    color: #fff;
+}
+
+.cmc-prompts__nav-item.is-active .cmc-badge--custom {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.cmc-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+    background: #f0f0f1;
+    color: #50575e;
+    margin-left: 8px;
+}
+
+.cmc-badge--custom {
+    background: #fcf0e2;
+    color: #a04100;
+}
+
+.cmc-prompts__panels {
+    min-width: 0;
+}
+
+.cmc-prompts__panel {
+    display: none;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.cmc-prompts__panel.is-active {
+    display: block;
+}
+
+.cmc-prompts__panel-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid #f0f0f1;
+    background: #fafafa;
+}
+
+.cmc-prompts__panel-header h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.cmc-prompts__panel-header .description {
+    margin: 0 0 6px;
+    color: #646970;
+}
+
+.cmc-status {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #50575e;
+}
+
+.cmc-status--custom {
+    color: #a04100;
+}
+
+.cmc-prompt-form {
+    padding: 16px 22px 20px;
+}
+
+.cmc-prompt-textarea {
+    width: 100%;
+    min-height: 480px;
+    font-family: Menlo, Consolas, "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fdfdfd;
+}
+
+.cmc-prompt-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.cmc-prompt-default {
+    margin-top: 16px;
+    border-top: 1px dashed #e0e0e0;
+    padding-top: 12px;
+}
+
+.cmc-prompt-default summary {
+    cursor: pointer;
+    color: #2271b1;
+    font-size: 13px;
+}
+
+.cmc-prompt-default pre {
+    margin-top: 10px;
+    padding: 12px;
+    background: #f6f7f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 340px;
+    overflow: auto;
+}
+
+@media (max-width: 960px) {
+    .cmc-prompts {
+        grid-template-columns: 1fr;
+    }
+    .cmc-prompts__nav {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
+/* ---------- Pages screen ---------- */
+
+.cmc-pages-wrap {
+    max-width: 1080px;
+}
+
+.cmc-pages-wrap .cmc-step.is-hidden {
+    display: none;
+}
+
+.cmc-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+}
+
+.cmc-field-row__label {
+    min-width: 90px;
+    font-weight: 600;
+}
+
+.cmc-select {
+    min-width: 340px;
+    max-width: 520px;
+}
+
+.cmc-page-meta,
+.cmc-prompt-meta {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.cmc-page-meta li,
+.cmc-prompt-meta li {
+    margin: 0;
+}
+
+.cmc-prompt-meta code {
+    background: #f6f7f7;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.cmc-original {
+    margin-top: 12px;
+    border-top: 1px dashed #e0e0e0;
+    padding-top: 12px;
+}
+
+.cmc-original summary {
+    cursor: pointer;
+    color: #2271b1;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.cmc-code {
+    width: 100%;
+    font-family: Menlo, Consolas, "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fdfdfd;
+}
+
+.cmc-original-content {
+    background: #f6f7f7;
+    color: #3c434a;
+}
+
+.cmc-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.cmc-inline-msg {
+    font-size: 13px;
+    color: #50575e;
+}
+
+.cmc-inline-msg.is-loading {
+    color: #646970;
+}
+
+.cmc-inline-msg.is-success {
+    color: #008a20;
+    font-weight: 500;
+}
+
+.cmc-inline-msg.is-error {
+    color: #b32d2e;
+    font-weight: 500;
+}
+
+/* ---------- Code textarea with inline Copy button ---------- */
+
+.cmc-code-wrap {
+    position: relative;
+}
+
+.cmc-code-wrap .cmc-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    z-index: 2;
+    opacity: 0.7;
+    transition: opacity 0.1s ease;
+}
+
+.cmc-code-wrap:hover .cmc-copy-btn,
+.cmc-code-wrap .cmc-copy-btn:focus {
+    opacity: 1;
+}
+
+/* ---------- Spinner ---------- */
+
+.cmc-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: -2px;
+    animation: cmc-spin 0.7s linear infinite;
+}
+
+.button:not(.button-primary) .cmc-spinner,
+.button-secondary .cmc-spinner {
+    border-color: rgba(34, 113, 177, 0.25);
+    border-top-color: #2271b1;
+}
+
+@keyframes cmc-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Combobox (grouped + search) ---------- */
+
+.cmc-combobox {
+    position: relative;
+    display: inline-block;
+    min-width: 340px;
+    max-width: 520px;
+    width: 100%;
+}
+
+.cmc-combobox__select.screen-reader-text {
+    /* rely on WP's .screen-reader-text to visually hide but keep focusable for form submission */
+}
+
+.cmc-combobox__toggle {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 10px;
+    min-height: 32px;
+    background: #fff;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    color: #2c3338;
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.cmc-combobox__toggle:hover {
+    border-color: #2271b1;
+}
+
+.cmc-combobox.is-open .cmc-combobox__toggle,
+.cmc-combobox__toggle:focus-visible {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.cmc-combobox__toggle-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cmc-combobox__caret {
+    color: #646970;
+    font-size: 11px;
+}
+
+.cmc-combobox__panel {
+    /* position: absolute; */
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+}
+
+.cmc-combobox__search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.cmc-combobox__search:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
+}
+
+.cmc-combobox__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.cmc-combobox__group-label {
+    padding: 8px 10px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #646970;
+    background: transparent;
+    border-top: 1px solid #f0f0f1;
+    margin-top: 2px;
+}
+
+.cmc-combobox__group-label:first-child {
+    border-top: 0;
+    margin-top: 0;
+}
+
+.cmc-combobox__option {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1e1e1e;
+    cursor: pointer;
+    outline: none;
+}
+
+.cmc-combobox__option:hover,
+.cmc-combobox__option:focus {
+    background: #f0f6fc;
+    color: #0a4b78;
+}
+
+.cmc-combobox__option.is-selected {
+    background: #2271b1;
+    color: #fff;
+    font-weight: 500;
+}
+
+.cmc-combobox__option.is-selected:hover,
+.cmc-combobox__option.is-selected:focus {
+    background: #135e96;
+    color: #fff;
+}
+
+.cmc-combobox__empty {
+    margin: 6px 0 2px;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: #646970;
+    text-align: center;
+}
+
+/* ---------- Toasts ---------- */
+
+.cmc-toasts {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 360px;
+}
+
+.cmc-toast {
+    pointer-events: auto;
+    background: #fff;
+    color: #1f2937;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 8px;
+    padding: 12px 14px 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.cmc-toast.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.cmc-toast.is-success { border-left-color: #008a20; }
+.cmc-toast.is-error   { border-left-color: #b32d2e; }
+.cmc-toast.is-warning { border-left-color: #dba617; }
+.cmc-toast.is-info    { border-left-color: #2271b1; }
+
+.cmc-toast__body {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.cmc-toast__body a {
+    color: #2271b1;
+}
+
+.cmc-toast__close {
+    all: unset;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.cmc-toast__close:hover {
+    color: #1f2937;
+    background: #f3f4f6;
+}
+
+/* ---------- Site Setup ---------- */
+
+.cmc-setup-progress {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    padding: 14px 22px;
+    margin: 18px 0 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.cmc-setup-progress__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 8px;
+}
+
+.cmc-setup-progress__head strong {
+    font-size: 14px;
+}
+
+.cmc-setup-progress__head .description {
+    color: #646970;
+    font-size: 12px;
+}
+
+.cmc-setup-progress__bar {
+    height: 6px;
+    background: #f0f0f1;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.cmc-setup-progress__bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2ec4b6, #2271b1);
+    transition: width 200ms ease;
+}
+
+.cmc-setup-card.is-done .cmc-card__header {
+    background: #f3faf8;
+}
+
+.cmc-setup-card .cmc-setup-check {
+    display: inline-block;
+    width: 18px;
+    margin-right: 4px;
+    color: #a7aaad;
+    font-size: 14px;
+}
+
+.cmc-setup-card.is-done .cmc-setup-check {
+    color: #2ec4b6;
+}
+
+.cmc-setup-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.cmc-setup-row label {
+    min-width: 110px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.cmc-setup-row .description {
+    width: 100%;
+    margin: 2px 0 0 120px;
+    color: #646970;
+    font-size: 12px;
+}
+
+.cmc-setup-meta {
+    color: #50575e;
+    font-size: 12px;
+}
+
+.cmc-setup-warn {
+    color: #8c5a00;
+    background: #fcf9e8;
+    border: 1px solid #f5e6a8;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 6px 0;
+}
+
+.cmc-setup-mark-form {
+    margin-top: 10px;
+}
+
+.cmc-setup-mark-form label {
+    color: #50575e;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* --- General card preview (old → new) --- */
+.cmc-setup-preview {
+    margin: 12px 0 14px;
+    padding: 14px 16px;
+    background: #f6f7f9;
+    border: 1px solid #dcdfe5;
+    border-radius: 8px;
+}
+.cmc-setup-preview__row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px 14px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid #e8ebef;
+}
+.cmc-setup-preview__row:last-child { border-bottom: 0; }
+.cmc-setup-preview dt {
+    margin: 0;
+    font-weight: 600;
+    color: #1d2327;
+    font-size: 13px;
+}
+.cmc-setup-preview dd {
+    margin: 0;
+    font-size: 13px;
+    color: #1d2327;
+    word-break: break-word;
+}
+.cmc-setup-preview dd code {
+    background: #fff;
+    border: 1px solid #e2e5ea;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.cmc-setup-arrow {
+    display: inline-block;
+    margin: 0 6px;
+    color: #8992a3;
+    font-weight: 600;
+}
+.cmc-setup-warn-inline {
+    color: #8c5a00;
+    font-style: italic;
+    font-size: 12.5px;
+}
+
+/* --- Sub-blocks inside a card (Products / Homepage) --- */
+.cmc-setup-subblock {
+    padding: 16px 0;
+    border-top: 1px solid #e5e7eb;
+}
+.cmc-setup-subblock:first-child {
+    padding-top: 4px;
+    border-top: 0;
+}
+.cmc-setup-subblock:last-child {
+    padding-bottom: 4px;
+}
+.cmc-setup-subblock > h3 {
+    margin: 0 0 10px;
+    padding: 8px 0 8px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1d2327;
+    border-left: 4px solid var(--cmc-primary, #2ec4b6);
+    background: linear-gradient(90deg, rgba(46, 196, 182, 0.08) 0%, rgba(46, 196, 182, 0) 60%);
+    border-radius: 0 6px 6px 0;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+.cmc-setup-subblock > p,
+.cmc-setup-subblock > p.description {
+    margin: 0 0 10px;
+}
+
+/* --- Collapsible group: Manual / individual tools --- */
+.cmc-setup-tools {
+    padding: 0;
+}
+.cmc-setup-tools > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    margin: 16px 0 0;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #1d2327;
+    transition: background-color .15s ease;
+}
+.cmc-setup-tools > summary::-webkit-details-marker { display: none; }
+.cmc-setup-tools > summary:hover { background: #eef0f1; }
+.cmc-setup-tools[open] > summary {
+    background: #eef9f7;
+    border-color: var(--cmc-primary, #2ec4b6);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.cmc-setup-tools__chev {
+    display: inline-block;
+    transition: transform .15s ease;
+    color: var(--cmc-primary, #2ec4b6);
+    font-size: 11px;
+}
+.cmc-setup-tools[open] .cmc-setup-tools__chev { transform: rotate(90deg); }
+.cmc-setup-tools__title {
+    font-size: 14.5px;
+    font-weight: 700;
+}
+.cmc-setup-tools__hint {
+    color: #646970;
+    font-weight: 400;
+    font-size: 12.5px;
+}
+.cmc-setup-tools__body {
+    padding: 4px 14px 12px;
+    border: 1px solid var(--cmc-primary, #2ec4b6);
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    background: #fff;
+}
+.cmc-setup-tools__body > .cmc-setup-subblock:first-child {
+    padding-top: 12px;
+    border-top: 0;
+}
+
+/* --- Homepage prompt textarea + inline buttons --- */
+.cmc-homepage-prompt-wrap {
+    margin-top: 10px;
+}
+.cmc-homepage-prompt {
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre;
+    overflow: auto;
+    background: #fbfbfd;
+    border-color: #c6cad1;
+    padding-right: 80px; /* leave space for the absolute Copy button */
+}
+.cmc-prompt-generate-msg {
+    font-size: 12px;
+}
+.cmc-prompt-generate-msg.is-ok   { color: #1d7a52; }
+.cmc-prompt-generate-msg.is-warn { color: #8c5a00; }
+
+/* ============ Bulk generate ============ */
+.cmc-section-divider {
+    text-align: center;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+    margin: 28px 0 14px;
+    letter-spacing: 0.02em;
+}
+.cmc-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+.cmc-bulk-count {
+    color: #374151;
+    font-size: 13px;
+    margin-right: auto;
+}
+.cmc-bulk-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    background: #fff;
+}
+.cmc-bulk-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+}
+.cmc-bulk-table thead th {
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+.cmc-bulk-table tbody td,
+.cmc-bulk-table tbody th {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+    background: transparent;
+}
+.cmc-bulk-table tbody tr:last-child td,
+.cmc-bulk-table tbody tr:last-child th {
+    border-bottom: none;
+}
+.cmc-bulk-table .check-column {
+    width: 34px;
+    padding-left: 14px;
+}
+.cmc-bulk-status-col {
+    width: 140px;
+}
+.cmc-bulk-table tbody tr.is-cloned-row {
+    background: rgba(59, 130, 246, 0.04);
+}
+.cmc-bulk-table tbody tr.is-just-cloned {
+    background: rgba(34, 197, 94, 0.08);
+    animation: cmc-bulk-flash 1.2s ease-out;
+}
+@keyframes cmc-bulk-flash {
+    0%   { background: rgba(34, 197, 94, 0.25); }
+    100% { background: rgba(34, 197, 94, 0.08); }
+}
+.cmc-bulk-page-title {
+    color: #111827;
+    font-weight: 600;
+}
+.cmc-bulk-slug {
+    display: block;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+    background: none;
+    padding: 0;
+}
+.cmc-bulk-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: #f3f4f6;
+    color: #6b7280;
+    margin-left: 6px;
+    vertical-align: middle;
+    line-height: 1.6;
+}
+.cmc-bulk-badge.is-cloned {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.cmc-bulk-template {
+    max-width: 260px;
+    width: 100%;
+}
+.cmc-bulk-status-text {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+}
+.cmc-bulk-status-text.is-ok {
+    color: #15803d;
+    font-weight: 600;
+}
+.cmc-bulk-status-text.is-err {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+/* ---- Bulk modal ---- */
+.cmc-bulk-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+}
+.cmc-bulk-modal[hidden] {
+    display: none;
+}
+.cmc-bulk-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.5);
+}
+.cmc-bulk-modal__panel {
+    position: relative;
+    max-width: 640px;
+    width: calc(100% - 40px);
+    margin: 60px auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 22px 24px;
+    max-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.cmc-bulk-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 0 0 12px;
+    gap: 12px;
+}
+.cmc-bulk-modal__header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #111827;
+}
+.cmc-bulk-modal__progress-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+.cmc-bulk-modal__progress {
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.cmc-bulk-modal__progress span {
+    display: block;
+    height: 100%;
+    background: #2271b1;
+    transition: width 0.2s ease;
+}
+.cmc-bulk-modal__list {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    overflow-y: auto;
+    max-height: 420px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    background: #fafafa;
+}
+.cmc-bulk-job {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fff;
+    font-size: 13px;
+}
+.cmc-bulk-job:last-child {
+    border-bottom: none;
+}
+.cmc-bulk-job__status {
+    text-align: center;
+    font-size: 14px;
+    color: #9ca3af;
+    font-weight: 700;
+}
+.cmc-bulk-job[data-status="ok"]        .cmc-bulk-job__status { color: #15803d; }
+.cmc-bulk-job[data-status="error"]     .cmc-bulk-job__status { color: #b91c1c; }
+.cmc-bulk-job[data-status="cancelled"] .cmc-bulk-job__status { color: #9ca3af; }
+.cmc-bulk-job[data-status="running"]   .cmc-bulk-job__status {
+    color: #2271b1;
+    animation: cmc-bulk-spin 1.1s linear infinite;
+}
+@keyframes cmc-bulk-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.cmc-bulk-job__title {
+    color: #111827;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cmc-bulk-job__meta {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+.cmc-bulk-job[data-status="ok"]    .cmc-bulk-job__meta { color: #15803d; }
+.cmc-bulk-job[data-status="error"] .cmc-bulk-job__meta { color: #b91c1c; }
+.cmc-bulk-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+}
+
+/* ------------ Product Image Rename (Site Setup card #6) ------------ */
+.cmc-img-rename .cmc-setup-row { margin: 8px 0; }
+.cmc-img-rename .cmc-img-rename-msg {
+    margin: 10px 0 0 0;
+    font-style: italic;
+    min-height: 1.2em;
+}
+.cmc-img-rename .cmc-img-rename-msg.is-ok    { color: #2d7a32; font-style: normal; }
+.cmc-img-rename .cmc-img-rename-msg.is-error { color: #b32d2e; font-style: normal; }
+
+.cmc-img-rename-progress {
+    margin: 12px 0;
+}
+.cmc-img-rename-progress__bar {
+    height: 10px;
+    background: #eef2f7;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.cmc-img-rename-progress__bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2ec4b6, #4f8bff);
+    transition: width 180ms ease;
+}
+.cmc-img-rename-progress__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #555;
+}
+
+.cmc-img-rename-table {
+    margin-top: 12px;
+    border-collapse: collapse;
+}
+.cmc-img-rename-table th,
+.cmc-img-rename-table td {
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+.cmc-img-rename-table tr.is-ok    { background: #f1faf3; }
+.cmc-img-rename-table tr.is-error { background: #fdf1f1; }
+.cmc-img-rename-table td.cmc-col-missing.is-warn {
+    color: #b32d2e;
+    font-weight: 600;
+}
+.cmc-img-rename-table tr .cmc-error-detail {
+    display: block;
+    font-size: 12px;
+    color: #b32d2e;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 4px;
+}
+.cmc-img-rename-table th.cmc-col-pick,
+.cmc-img-rename-table td.cmc-col-pick {
+    width: 32px;
+    text-align: center;
+}
+.cmc-img-rename-table th.cmc-col-action,
+.cmc-img-rename-table td.cmc-col-action {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+/* Homepage layout chooser (Setup → Homepage Prompt → Layout dropdown) */
+.cmc-homepage-layout-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    background: #f6f7f7;
+    border: 1px solid #e0e3e6;
+    border-radius: 4px;
+}
+.cmc-homepage-layout-form label {
+    font-weight: 600;
+    margin: 0;
+}
+.cmc-homepage-layout-form select {
+    min-width: 380px;
+    max-width: 100%;
+}
+.cmc-homepage-layout-form .cmc-setup-meta {
+    color: #555;
+    font-size: 12px;
+}
+
+/* ------------ Products Eraser (Site Setup card 2f) ------------ */
+.cmc-products-eraser-card {
+    border-top: 1px solid #f3d2d2 !important;
+    background: #fffafa;
+    margin: 8px -10px 0;
+    padding: 14px 10px !important;
+    border-radius: 6px;
+}
+.cmc-products-eraser-card > h3 {
+    color: #a11212;
+}
+.cmc-products-eraser .cmc-setup-row {
+    margin: 8px 0;
+}
+.cmc-products-eraser-counts {
+    font-size: 13px;
+    color: #50575e;
+}
+.cmc-products-eraser-confirm-label {
+    min-width: auto !important;
+    font-weight: 500 !important;
+    color: #a11212 !important;
+}
+.cmc-btn-products-delete {
+    background: #a11212 !important;
+    border-color: #8a0f0f !important;
+    color: #fff !important;
+}
+.cmc-btn-products-delete:hover:not([disabled]) {
+    background: #8a0f0f !important;
+    border-color: #720c0c !important;
+}
+.cmc-btn-products-delete[disabled] {
+    background: #d8a5a5 !important;
+    border-color: #c78a8a !important;
+    color: #fff !important;
+    cursor: not-allowed;
+}
+.cmc-products-eraser-msg {
+    margin: 10px 0 0 0;
+    font-style: italic;
+    min-height: 1.2em;
+}
+.cmc-products-eraser-msg.is-ok    { color: #1d7a52; font-style: normal; }
+.cmc-products-eraser-msg.is-error { color: #b32d2e; font-style: normal; }
+.cmc-products-eraser-progress {
+    margin: 12px 0;
+}
+.cmc-products-eraser-progress__bar {
+    height: 10px;
+    background: #fae3e3;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.cmc-products-eraser-progress__bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #b32d2e, #e6704b);
+    transition: width 180ms ease;
+}
+.cmc-products-eraser-progress__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #555;
+}
+.cmc-products-eraser-errors {
+    margin: 10px 0 0;
+    padding: 10px 14px 10px 28px;
+    background: #fdf1f1;
+    border: 1px solid #f2c9c9;
+    border-radius: 6px;
+    color: #6e1515;
+    font-size: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   Help tooltip — small "?" trigger next to a label, opens a rich bubble
+   with the full description on hover / focus / click. Keeps the form
+   compact while preserving the explanatory text for power users.
+   ========================================================================== */
+
+.cmc-help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    padding: 0;
+    border-radius: 50%;
+    background: #f0f0f1;
+    color: #50575e;
+    font: 700 10px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    border: 1px solid #c3c4c7;
+    cursor: help;
+    user-select: none;
+    vertical-align: middle;
+    text-decoration: none;
+    transition: background-color 120ms, color 120ms, border-color 120ms;
+}
+.cmc-help:hover,
+.cmc-help:focus,
+.cmc-help[aria-expanded="true"] {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.18);
+}
+
+.cmc-help__bubble {
+    position: absolute;
+    z-index: 99999;
+    max-width: 420px;
+    min-width: 260px;
+    padding: 12px 14px;
+    background: #fff;
+    color: #1d2327;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    font-size: 13px;
+    line-height: 1.55;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity 120ms, transform 120ms;
+}
+.cmc-help__bubble.is-shown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.cmc-help__bubble code {
+    background: #f6f7f7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+.cmc-help__bubble p { margin: 0 0 8px; }
+.cmc-help__bubble p:last-child { margin-bottom: 0; }
+.cmc-help__bubble strong { color: #1d2327; }
+.cmc-help__bubble em { color: #50575e; }
+
+/* Required / accent row used to highlight the Industry field at the
+   top of "Shortcodes & Company Info" — visually flag a setting the
+   user must update on every fresh clone. */
+.cmc-row-accent th,
+.cmc-row-accent td {
+    background: rgba(46, 196, 182, 0.07);
+    border-left: 4px solid var(--cmc-primary, #2ec4b6);
+}
+.cmc-row-accent th {
+    border-radius: 6px 0 0 6px;
+}
+.cmc-row-accent td {
+    border-radius: 0 6px 6px 0;
+}
+.cmc-row-accent th label {
+    font-weight: 600;
+    color: #1d2327;
+}
+.cmc-badge-required {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 7px;
+    background: var(--cmc-primary, #2ec4b6);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 10px;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   Scrollable product lists — keep long Scan results compact so the
+   "Seed reviews" / "Rename selected" action buttons stay visible above
+   the fold. Sticky header keeps column titles in view as the user
+   scrolls; max-height kicks in once the list has more than ~10 rows.
+   ========================================================================== */
+
+.cmc-review-seeder-list,
+.cmc-img-rename-results {
+    overflow-y: auto;
+    margin: 10px 0;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    background: #fff;
+}
+/* Reviews list: keep it deliberately short (~7 rows visible) so the
+   action buttons + progress bar below stay above the fold while the
+   user picks products. Image-rename results can stay taller because
+   the user needs to verify many lines after a batch run. */
+.cmc-review-seeder-list { max-height: 260px; }
+.cmc-img-rename-results { max-height: 420px; }
+
+.cmc-review-seeder-list table,
+.cmc-img-rename-results table {
+    margin: 0;
+    border: 0;
+}
+.cmc-review-seeder-list thead th,
+.cmc-img-rename-results thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f6f7f7;
+    border-bottom: 1px solid #c3c4c7;
+    box-shadow: 0 1px 0 #e5e7eb;
+}
+
+/* Review-seed progress bar — taller, brighter, animated stripes so the
+   user has clear feedback that the seed pass is running (each click
+   normally takes 5–15s for ~5 products and the bar was previously
+   sitting flat on the page with no visual cue). */
+.cmc-review-seeder-progress {
+    margin: 10px 0;
+}
+.cmc-review-seeder-progress__bar {
+    width: 100%;
+    height: 18px;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.cmc-review-seeder-progress__bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f97316, #facc15);
+    background-size: 32px 32px;
+    background-image: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.18) 25%, transparent 25%,
+        transparent 50%, rgba(255, 255, 255, 0.18) 50%,
+        rgba(255, 255, 255, 0.18) 75%, transparent 75%, transparent),
+        linear-gradient(90deg, #f97316, #facc15);
+    transition: width 280ms ease;
+    animation: cmc-stripes 1.2s linear infinite;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
+}
+@keyframes cmc-stripes {
+    0%   { background-position: 0 0,    0 0; }
+    100% { background-position: 32px 0, 0 0; }
+}
+.cmc-review-seeder-progress__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #444;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Repair image metadata — full progress bar (was message-only). The
+   batched regenerate runs through every product image one chunk at a
+   time, so the user needs the same visual feedback as Rename Selected.
+   ========================================================================== */
+
+.cmc-img-meta-repair-progress {
+    margin-top: 10px;
+}
+.cmc-img-meta-repair-progress__bar {
+    width: 100%;
+    height: 14px;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.cmc-img-meta-repair-progress__bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cmc-primary, #2ec4b6), #4cd7c8);
+    transition: width 220ms ease;
+}
+.cmc-img-meta-repair-progress__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #555;
+}
+
+/* ==========================================================================
+   AI Title Rewriter — striped progress bar (purple) + scrollable
+   sample diff so the operator can sanity-check the AI's output without
+   leaving the page.
+   ========================================================================== */
+
+.cmc-title-rewriter-progress {
+    margin: 10px 0;
+}
+.cmc-title-rewriter-progress__bar {
+    width: 100%;
+    height: 18px;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.cmc-title-rewriter-progress__bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background-image: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.18) 25%, transparent 25%,
+        transparent 50%, rgba(255, 255, 255, 0.18) 50%,
+        rgba(255, 255, 255, 0.18) 75%, transparent 75%, transparent),
+        linear-gradient(90deg, #6366f1, #a855f7);
+    background-size: 32px 32px, 100% 100%;
+    transition: width 280ms ease;
+    animation: cmc-stripes 1.2s linear infinite;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
+}
+.cmc-title-rewriter-progress__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #444;
+    font-weight: 500;
+}
+.cmc-title-rewriter-results {
+    max-height: 320px;
+    overflow-y: auto;
+    margin: 10px 0;
+    padding: 0;
+    border: 0;
+}
+.cmc-title-rewriter-sample {
+    margin: 6px 0;
+    padding: 8px 12px;
+    background: #fafafa;
+    border-left: 3px solid #6366f1;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+.cmc-title-rewriter-sample.is-error {
+    border-left-color: #b32d2e;
+    background: #fdf1f1;
+}
+.cmc-title-rewriter-sample__before {
+    color: #777;
+    text-decoration: line-through;
+}
+.cmc-title-rewriter-sample__after {
+    color: #1d2327;
+    font-weight: 600;
+}
+.cmc-title-rewriter-sample__error {
+    color: #b32d2e;
+    font-style: italic;
+}
+
+/* Description status pill on each sample row in the title rewriter
+   results — green when the AI also rewrote the description, amber
+   when only the title was replaced (description couldn't pass
+   validation and was left as-is). */
+.cmc-title-rewriter-sample__desc {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    background: #e7f5ec;
+    color: #2b7a3f;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.cmc-title-rewriter-sample__desc--kept {
+    background: #fdf3df;
+    color: #8a5800;
+}
+
+/* ==========================================================================
+   Run All Setup Tasks — orchestrator card at the top of Sản phẩm.
+   Visual style is more prominent than other subblocks (gradient header,
+   thicker border, dedicated colour) so the operator notices it as the
+   "do everything" shortcut.
+   ========================================================================== */
+
+.cmc-run-all-card {
+    border: 2px solid var(--cmc-primary, #2ec4b6);
+    border-radius: 10px;
+    padding: 14px 18px !important;
+    background: linear-gradient(135deg, rgba(46, 196, 182, 0.05) 0%, rgba(99, 102, 241, 0.04) 100%);
+    margin: 6px 0 14px;
+}
+.cmc-run-all-card > h3 {
+    margin: 0 0 10px !important;
+    padding-left: 0 !important;
+    background: none !important;
+    border-left: 0 !important;
+    border-radius: 0 !important;
+    font-size: 17px !important;
+    color: var(--cmc-primary, #2ec4b6);
+}
+
+.cmc-run-all__opts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+}
+.cmc-run-all__opts label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+.cmc-run-all__opts label.cmc-run-all__select-all {
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px dashed #dcdcde;
+    color: #1d2327;
+}
+
+/* --- Woo POD Setup button status (Find products on Amazon block) --- */
+.cmc-pod-setup-status {
+    margin-left: 8px;
+    font-size: 12.5px;
+}
+.cmc-pod-setup-status.is-running { color: #646970; }
+.cmc-pod-setup-status.is-ok      { color: #166534; }
+.cmc-pod-setup-status.is-error   { color: #b91c1c; }
+.cmc-run-all__meta {
+    color: #888;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.cmc-btn-run-all {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+    border-color: #6366f1 !important;
+    color: #fff !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3) !important;
+}
+.cmc-btn-run-all:hover {
+    background: linear-gradient(135deg, #5557e8 0%, #9333ea 100%) !important;
+    border-color: #5557e8 !important;
+    color: #fff !important;
+}
+.cmc-btn-run-all:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+.cmc-run-all-summary {
+    margin-left: 12px;
+    font-weight: 500;
+}
+
+/* Overall progress bar */
+.cmc-run-all-overall {
+    margin: 12px 0;
+}
+.cmc-run-all-overall__label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+.cmc-run-all-overall__bar {
+    width: 100%;
+    height: 16px;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.cmc-run-all-overall__bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+    transition: width 280ms ease;
+}
+.cmc-run-all-overall__meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #444;
+}
+
+/* Timeline of 5 steps */
+.cmc-run-all-timeline {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+}
+.cmc-run-all-timeline li {
+    display: grid;
+    grid-template-columns: 28px minmax(200px, 1fr) 2fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 13px;
+}
+.cmc-run-all-timeline li:last-child { border-bottom: 0; }
+.cmc-run-all-timeline li.is-pending  { color: #888; }
+.cmc-run-all-timeline li.is-running  { background: rgba(99, 102, 241, 0.08); color: #1d2327; font-weight: 500; }
+.cmc-run-all-timeline li.is-done     { background: rgba(46, 196, 182, 0.06); color: #1d2327; }
+.cmc-run-all-timeline li.is-failed   { background: rgba(179, 45, 46, 0.07); color: #6e1515; }
+.cmc-run-all-timeline li.is-skipped  { color: #aaa; }
+.cmc-run-all-icon {
+    font-size: 16px;
+    text-align: center;
+}
+.cmc-run-all-name {
+    font-weight: 500;
+}
+.cmc-run-all-log {
+    color: #555;
+    font-size: 12px;
+    word-break: break-word;
+}
+.cmc-run-all-timeline li.is-running .cmc-run-all-log {
+    color: #4f46e5;
+    font-weight: 500;
+}

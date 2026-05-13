@@ -1,0 +1,43 @@
+# ----- OS junk -----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ----- Editor -----
+.idea/
+.vscode/
+*.sublime-*
+
+# ----- Local dev / secrets -----
+# Never commit env files or local config — the updater pulls a public
+# ZIP, so anything that lands here ships to every cloned site.
+.env
+.env.*
+*.local.php
+config/local.php
+
+# ----- WP / build artifacts -----
+# Backups WP creates next to files when editing via the admin file editor.
+*.bak
+*-backup.zip
+*.zip
+
+# ----- AI provider keys / scratch -----
+# Never check raw key files in. Encrypted blobs live in wp_options
+# (per-site DB), not in the repo.
+*api-key*.txt
+*api_key*.txt
+
+# ----- Logs -----
+*.log
+debug.log
+error_log
+
+# ----- Build output (release ZIPs are built fresh by CI) -----
+build/
+dist/
+
+# ----- Optional vendor (we don't use Composer yet, future-proof) -----
+vendor/
+node_modules/

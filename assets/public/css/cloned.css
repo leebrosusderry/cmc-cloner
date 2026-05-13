@@ -1,0 +1,1510 @@
+/* ---------- CMC Cloner — Public (front-end) styles for cloned pages ----------
+ *
+ * Scoped to `.cmc-section` wrappers emitted by plugin skeletons so the rest
+ * of the theme is untouched. CSS variables are set per-page by an inline
+ * <style> block from CMC_Public, derived from the page's style seed +
+ * configured primary color.
+ */
+
+.cmc-section {
+    /* Defaults (get overridden by the inline per-page block) */
+    --cmc-primary: #2ec4b6;
+    --cmc-accent: #2ec4b6;
+    --cmc-soft-bg: #f6fbfa;
+    --cmc-border-sub: #d8efec;
+    --cmc-radius: 8px;
+    --cmc-section-pad: 32px;
+    --cmc-heading-align: left;
+}
+
+/* ---------- Content container ----------
+ * Replaces Flatsome col offset for deterministic centering across all
+ * breakpoints. Skeletons should use `[col span="12"]` + an inner
+ * `<div class="cmc-container">` wrapper instead of `offset="1"`, so the
+ * rendered HTML stays predictable regardless of theme grid customization.
+ */
+.cmc-section .cmc-container {
+    max-width: 880px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+.cmc-section .cmc-container--wide {
+    max-width: 1040px;
+}
+.cmc-section .cmc-container--narrow {
+    max-width: 720px;
+}
+
+/* ---------- Shared typography ---------- */
+
+.cmc-page-title {
+    font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+    line-height: 1.25;
+    margin: 0 0 8px;
+}
+
+.cmc-lead {
+    color: #4b5563;
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cmc-section h2 {
+    font-size: 1.25rem;
+    line-height: 1.35;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-section h3 {
+    font-size: 1.05rem;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.cmc-section p {
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.cmc-section ul,
+.cmc-section ol {
+    line-height: 1.6;
+    padding-left: 1.3em;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.cmc-section ul li,
+.cmc-section ol li {
+    margin: 2px 0;
+}
+
+/* ---------- Policy sections (refund/return/shipping/payment/privacy/terms/cookie) ---------- */
+
+.cmc-policy-section {
+    padding-top: var(--cmc-section-pad) !important;
+    padding-bottom: var(--cmc-section-pad) !important;
+}
+
+.cmc-policy-section h2 {
+    color: #1f2937;
+}
+
+.cmc-policy-section h2::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 14px;
+    margin-right: 10px;
+    background: var(--cmc-primary);
+    vertical-align: -2px;
+    border-radius: 2px;
+}
+
+/* ---------- Contact banner (shared) ---------- */
+
+.cmc-contact-banner {
+    border-radius: var(--cmc-radius) !important;
+    border-color: var(--cmc-border-sub) !important;
+    background: var(--cmc-soft-bg) !important;
+}
+
+.cmc-contact-banner h3 {
+    color: #111827;
+}
+
+/* ---------- Contact page ---------- */
+
+.cmc-contact-section .col {
+    padding: 14px;
+}
+
+.cmc-contact-section .ux_image_box h3 {
+    color: var(--cmc-accent);
+    font-size: 1.1rem;
+    margin-top: 8px;
+}
+
+/* ---------- About page ---------- */
+
+.cmc-about-hero {
+    background: var(--cmc-soft-bg);
+}
+
+.cmc-about-hero .cmc-page-title {
+    color: #111827;
+}
+
+.cmc-about-story h2,
+.cmc-about-commitment h2 {
+    border-bottom: 2px solid var(--cmc-primary);
+    display: inline-block;
+    padding-bottom: 4px;
+}
+
+.cmc-about-offerings h2 {
+    text-align: center;
+    border-bottom: 0;
+}
+
+.cmc-about-offerings h3 {
+    color: var(--cmc-accent);
+}
+
+/* ---------- FAQ page ---------- */
+
+.cmc-faq-section .accordion-item {
+    border-radius: var(--cmc-radius);
+    border: 1px solid var(--cmc-border-sub);
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.cmc-faq-section .accordion-title {
+    background: var(--cmc-soft-bg);
+}
+
+/* ---------- Heading alignment driven by style seed (applied to hero titles only) ---------- */
+
+.cmc-section .cmc-page-title,
+.cmc-section .cmc-lead {
+    text-align: var(--cmc-heading-align);
+}
+
+/* Skeletons that explicitly center the hero (inline style) override the variable;
+   that's intentional — only skeletons without an inline align respect the var. */
+
+/* ---------- Card variant ---------- */
+
+.cmc-variant--cards .cmc-card-block {
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cmc-variant--cards .cmc-card-block h2 {
+    margin-top: 0;
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.cmc-variant--cards .cmc-card-block h2::before {
+    display: none;
+}
+
+/* ---------- Band variant (alternating section bands) ---------- */
+
+.cmc-variant--bands .cmc-band {
+    padding: 16px 20px;
+    border-radius: var(--cmc-radius);
+    margin-bottom: 8px;
+}
+
+.cmc-variant--bands .cmc-band--soft {
+    background: var(--cmc-soft-bg);
+}
+
+.cmc-variant--bands .cmc-band h2 {
+    margin-top: 0;
+}
+
+/* ---------- Minimal variant ---------- */
+
+.cmc-variant--minimal .cmc-page-title {
+    font-weight: 500;
+}
+
+.cmc-variant--minimal h2 {
+    border-bottom: 0;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+.cmc-variant--minimal h2::before {
+    display: none;
+}
+
+/* ---------- Utility ---------- */
+
+.cmc-accent-bar {
+    display: block;
+    width: 52px;
+    height: 4px;
+    background: var(--cmc-primary);
+    border-radius: 3px;
+    margin: 8px 0 18px;
+}
+
+.cmc-section .cmc-accent-bar {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* ---------- Shared design tokens: eyebrow & soft background ---------- */
+
+.cmc-eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--cmc-accent);
+    margin-bottom: 10px;
+}
+
+.cmc-bg--soft {
+    background: var(--cmc-soft-bg);
+}
+
+/* ---------- About hero variants ---------- */
+
+.cmc-about-hero.cmc-hero--rich {
+    background:
+        radial-gradient(1200px 400px at 20% 0%, rgba(0, 0, 0, 0.02), transparent 60%),
+        linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 100%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-about-hero.cmc-hero--split {
+    background: linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 85%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-about-hero.cmc-hero--soft {
+    background: var(--cmc-soft-bg);
+}
+
+.cmc-about-hero .cmc-eyebrow {
+    margin-bottom: 14px;
+}
+
+/* Hero contact chips */
+
+.cmc-hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.cmc-about-hero.cmc-hero--split .cmc-hero-chips,
+.cmc-hero-chips--compact {
+    justify-content: flex-start;
+    margin-top: 18px;
+}
+
+.cmc-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: 999px;
+    font-size: 0.92rem;
+    color: #1f2937;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cmc-hero-chip__key {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cmc-accent);
+    font-weight: 700;
+}
+
+/* ---------- Quote card (mission in split hero, skeleton-1 mission panel) ---------- */
+
+.cmc-quote-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 26px 28px 26px 32px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.cmc-quote-card::before {
+    content: "\201C";
+    position: absolute;
+    top: 4px;
+    left: 14px;
+    font-size: 3.2rem;
+    line-height: 1;
+    color: var(--cmc-primary);
+    opacity: 0.25;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.cmc-quote-card h2,
+.cmc-quote-card h3 {
+    margin-top: 2px;
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.cmc-quote-card h2::before,
+.cmc-quote-card h3::before {
+    display: none;
+}
+
+.cmc-quote-card--mission {
+    background: linear-gradient(180deg, #fff 0%, var(--cmc-soft-bg) 100%);
+}
+
+/* ---------- Offerings panel ---------- */
+
+.cmc-offerings-panel {
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: calc(var(--cmc-radius) + 4px);
+    padding: 34px 36px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+.cmc-offerings-panel--flat {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+.cmc-about-offerings .cmc-offerings-panel h2 {
+    text-align: left;
+    border-bottom: 0;
+    margin-top: 4px;
+    padding-bottom: 0;
+}
+
+/* ---------- Values grid ---------- */
+
+.cmc-values-head {
+    margin-bottom: 26px;
+}
+
+.cmc-values-head--center {
+    text-align: center;
+}
+
+.cmc-values-head h2 {
+    margin-top: 4px;
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.cmc-values-head h2::before {
+    display: none;
+}
+
+.cmc-values-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 849px) {
+    .cmc-values-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmc-value-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 28px 24px 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cmc-value-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.cmc-value-card__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--cmc-soft-bg);
+    color: var(--cmc-accent);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.cmc-value-card h3 {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.cmc-value-card p {
+    color: #4b5563;
+    margin: 0;
+}
+
+/* ---------- Commitment pull-quote ---------- */
+
+.cmc-commitment-quote {
+    position: relative;
+    max-width: 780px;
+    margin: 10px auto 0;
+    padding: 22px 28px;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: #1f2937;
+    border-left: 3px solid var(--cmc-primary);
+    background: #fff;
+    border-radius: 0 var(--cmc-radius) var(--cmc-radius) 0;
+    text-align: left;
+}
+
+.cmc-about-commitment {
+    background: var(--cmc-soft-bg);
+}
+
+/* ---------- CTA banner ---------- */
+
+.cmc-cta-banner {
+    position: relative;
+    border-radius: calc(var(--cmc-radius) + 6px);
+    padding: 40px 44px;
+    color: #fff;
+    background:
+        linear-gradient(135deg, var(--cmc-primary) 0%, var(--cmc-accent) 100%);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.cmc-cta-banner::before {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cmc-cta-banner h2,
+.cmc-cta-banner h3 {
+    color: #fff;
+    border-bottom: 0;
+    margin-top: 0;
+    padding-bottom: 0;
+}
+
+.cmc-cta-banner h2::before,
+.cmc-cta-banner h3::before {
+    display: none;
+}
+
+.cmc-cta-banner p,
+.cmc-cta-banner a {
+    color: #fff;
+}
+
+.cmc-cta-banner a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.cmc-cta-banner--split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: center;
+}
+
+@media (max-width: 849px) {
+    .cmc-cta-banner--split {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Card block — rich variation (skeleton-3) ---------- */
+
+.cmc-variant--cards .cmc-card-block--rich {
+    padding: 28px 30px;
+    border-radius: calc(var(--cmc-radius) + 2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.cmc-variant--cards .cmc-card-block--rich .cmc-eyebrow {
+    margin-bottom: 6px;
+}
+
+/* ---------- Editorial variant (skeleton-4) ---------- */
+
+.cmc-variant--editorial {
+    background: #fff;
+}
+
+.cmc-page-title--editorial {
+    font-size: clamp(2rem, 3.4vw, 2.8rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+}
+
+.cmc-lead--editorial {
+    font-size: 1.2rem;
+    color: #374151;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    line-height: 1.6;
+}
+
+.cmc-editorial-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--cmc-border-sub);
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.cmc-editorial-meta__item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.cmc-editorial-meta__item + .cmc-editorial-meta__item::before {
+    content: "·";
+    margin-right: 18px;
+    color: var(--cmc-border-sub);
+}
+
+.cmc-variant--editorial .cmc-editorial-h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    padding-bottom: 0;
+    border-bottom: 0;
+    letter-spacing: -0.005em;
+    color: #111827;
+}
+
+.cmc-variant--editorial .cmc-editorial-h2::before {
+    display: none;
+}
+
+.cmc-editorial-note {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin: -4px 0 14px;
+}
+
+.cmc-editorial-pullquote {
+    margin: 36px 0;
+    padding: 8px 0 8px 24px;
+    border-left: 4px solid var(--cmc-primary);
+    font-size: 1.25rem;
+    line-height: 1.55;
+    color: #1f2937;
+    font-style: italic;
+}
+
+.cmc-editorial-values {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 0;
+    counter-reset: cmc-ed-values;
+}
+
+.cmc-editorial-values li {
+    counter-increment: cmc-ed-values;
+    position: relative;
+    padding: 14px 0 14px 56px;
+    border-top: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-editorial-values li:last-child {
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-editorial-values li::before {
+    content: counter(cmc-ed-values, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--cmc-accent);
+    letter-spacing: 0.04em;
+}
+
+.cmc-editorial-values__label {
+    display: inline-block;
+    font-weight: 700;
+    color: #111827;
+    margin-right: 6px;
+}
+
+.cmc-editorial-values__label::after {
+    content: " — ";
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.cmc-editorial-cta {
+    margin-top: 40px;
+    padding: 26px 28px;
+    background: var(--cmc-soft-bg);
+    border-radius: var(--cmc-radius);
+    border-left: 4px solid var(--cmc-primary);
+}
+
+.cmc-editorial-cta h3 {
+    margin-top: 0;
+    color: #111827;
+}
+
+/* ---------- Contact hero variants (reuses .cmc-hero--rich/split/soft) ---------- */
+
+.cmc-contact-hero.cmc-hero--rich {
+    background:
+        radial-gradient(1200px 400px at 80% 0%, rgba(0, 0, 0, 0.02), transparent 60%),
+        linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 100%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-contact-hero.cmc-hero--split {
+    background: linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 85%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-contact-hero.cmc-hero--soft {
+    background: var(--cmc-soft-bg);
+}
+
+.cmc-contact-hero .cmc-page-title {
+    color: #111827;
+}
+
+/* ---------- Contact info cards ---------- */
+
+.cmc-contact-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.cmc-contact-cards--two {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 849px) {
+    .cmc-contact-cards,
+    .cmc-contact-cards--two {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmc-contact-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 28px 24px 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cmc-contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.cmc-contact-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--cmc-soft-bg);
+    color: var(--cmc-accent);
+    font-size: 1.3rem;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.cmc-contact-card .cmc-eyebrow {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.cmc-contact-card h3 {
+    margin-top: 2px;
+    margin-bottom: 10px;
+    color: #111827;
+}
+
+.cmc-contact-card p {
+    color: #4b5563;
+    margin: 0 0 6px;
+}
+
+.cmc-contact-card--flat {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 8px 12px 8px 12px;
+    box-shadow: none;
+}
+
+.cmc-contact-card--flat:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.cmc-offerings-panel .cmc-contact-cards {
+    margin-top: 18px;
+}
+
+/* ---------- Quote card — contact variant (two stacked blocks w/ divider) ---------- */
+
+.cmc-quote-card--contact {
+    background: linear-gradient(180deg, #fff 0%, var(--cmc-soft-bg) 100%);
+}
+
+.cmc-quote-card__divider {
+    height: 1px;
+    background: var(--cmc-border-sub);
+    margin: 16px 0;
+}
+
+/* ---------- Contact topics grid ---------- */
+
+.cmc-contact-topics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+@media (max-width: 849px) {
+    .cmc-contact-topics {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmc-contact-topic {
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 22px 24px;
+    border-left: 3px solid var(--cmc-primary);
+    transition: box-shadow 0.2s ease;
+}
+
+.cmc-contact-topic:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.cmc-contact-topic h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.cmc-contact-topic p {
+    color: #4b5563;
+    margin: 0 0 6px;
+}
+
+/* ---------- Policy hero variants ---------- */
+
+.cmc-policy-hero.cmc-hero--rich {
+    background:
+        radial-gradient(1000px 360px at 50% 0%, rgba(0, 0, 0, 0.025), transparent 60%),
+        linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 100%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-policy-hero.cmc-hero--split {
+    background: linear-gradient(180deg, var(--cmc-soft-bg) 0%, #fff 85%);
+    border-bottom: 1px solid var(--cmc-border-sub);
+}
+
+.cmc-policy-hero.cmc-hero--soft {
+    background: var(--cmc-soft-bg);
+}
+
+.cmc-policy-hero .cmc-page-title {
+    color: #111827;
+}
+
+/* ---------- Document meta pills ---------- */
+
+.cmc-doc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.cmc-policy-hero.cmc-hero--split .cmc-doc-meta,
+.cmc-doc-meta--compact {
+    justify-content: flex-start;
+    margin-top: 18px;
+}
+
+.cmc-doc-meta__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: #1f2937;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cmc-doc-meta__key {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cmc-accent);
+    font-weight: 700;
+}
+
+/* ---------- Numbered policy list (skeleton-1) ---------- */
+
+.cmc-policy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cmc-policy-item {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    transition: box-shadow 0.2s ease;
+}
+
+.cmc-policy-item:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 849px) {
+    .cmc-policy-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+.cmc-policy-item__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: var(--cmc-soft-bg);
+    color: var(--cmc-accent);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+}
+
+.cmc-policy-item__body h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    border-bottom: 0;
+    padding-bottom: 0;
+    color: #111827;
+}
+
+.cmc-policy-item__body h2::before {
+    display: none;
+}
+
+.cmc-policy-item__body p {
+    margin: 0 0 10px;
+}
+
+.cmc-policy-item__body p:last-child,
+.cmc-policy-item__body ul:last-child,
+.cmc-policy-item__body ol:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- Quote card — policy variant ---------- */
+
+.cmc-quote-card--policy {
+    background: linear-gradient(180deg, #fff 0%, var(--cmc-soft-bg) 100%);
+}
+
+/* ---------- Policy grid (skeleton-3) ---------- */
+
+.cmc-policy-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 849px) {
+    .cmc-policy-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmc-policy-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: var(--cmc-radius);
+    padding: 26px 24px 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cmc-policy-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.cmc-policy-card--wide {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 849px) {
+    .cmc-policy-card--wide {
+        grid-column: auto;
+    }
+}
+
+.cmc-policy-card__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--cmc-soft-bg);
+    color: var(--cmc-accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.cmc-policy-card h3 {
+    margin-top: 2px;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.cmc-policy-card p {
+    color: #4b5563;
+}
+
+.cmc-policy-card p:last-child,
+.cmc-policy-card ul:last-child,
+.cmc-policy-card ol:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- Editorial numbered H2 (skeleton-4) ---------- */
+
+.cmc-variant--editorial .cmc-editorial-h2--numbered {
+    position: relative;
+    padding-left: 54px;
+    margin-top: 44px;
+}
+
+.cmc-variant--editorial .cmc-editorial-h2--numbered::before {
+    content: attr(data-num);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--cmc-accent);
+    background: var(--cmc-soft-bg);
+    padding: 4px 8px;
+    border-radius: 6px;
+    line-height: 1;
+    display: inline-block;
+}
+
+@media (max-width: 849px) {
+    .cmc-variant--editorial .cmc-editorial-h2--numbered {
+        padding-left: 0;
+        padding-top: 34px;
+    }
+    .cmc-variant--editorial .cmc-editorial-h2--numbered::before {
+        top: 0;
+    }
+}
+
+/* =========================================================================
+ * Per-skeleton theme packs — one body class is emitted per page based on
+ * _cmc_skeleton meta (see CMC_Public::body_class). Each pack re-shapes the
+ * shared vocabulary (typography, radius, accents) so that skeleton-1..4
+ * feel like distinct design families rather than layout variants.
+ * ========================================================================= */
+
+/* ---------- skeleton-1 — Minimalist / Industrial ---------- */
+
+body.cmc-skel-1 .cmc-section {
+    --cmc-radius: 0px;
+}
+body.cmc-skel-1 .cmc-page-title {
+    font-weight: 400;
+    letter-spacing: -0.015em;
+}
+body.cmc-skel-1 .cmc-eyebrow {
+    letter-spacing: 0.22em;
+    font-size: 0.68rem;
+    color: #6b7280;
+}
+body.cmc-skel-1 .cmc-lead {
+    color: #525967;
+}
+body.cmc-skel-1 .cmc-section h2 {
+    font-weight: 500;
+    letter-spacing: -0.005em;
+}
+body.cmc-skel-1 .cmc-accent-bar {
+    width: 32px;
+    height: 2px;
+    background: #111;
+}
+body.cmc-skel-1 .cmc-policy-item__num,
+body.cmc-skel-1 .cmc-policy-card__num {
+    background: transparent;
+    color: #111;
+    border: 1px solid #111;
+    font-weight: 500;
+}
+body.cmc-skel-1 .cmc-doc-meta__pill,
+body.cmc-skel-1 .cmc-policy-card,
+body.cmc-skel-1 .cmc-card-block,
+body.cmc-skel-1 .cmc-card-block--rich,
+body.cmc-skel-1 .cmc-offerings-panel,
+body.cmc-skel-1 .cmc-quote-card--policy {
+    border-radius: 0;
+}
+
+/* ---------- skeleton-2 — Bold / High-contrast ---------- */
+
+body.cmc-skel-2 .cmc-page-title {
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+}
+body.cmc-skel-2 .cmc-section h2 {
+    font-weight: 700;
+    letter-spacing: -0.012em;
+}
+body.cmc-skel-2 .cmc-eyebrow {
+    font-weight: 700;
+    color: var(--cmc-primary);
+    letter-spacing: 0.14em;
+}
+body.cmc-skel-2 .cmc-accent-bar {
+    width: 72px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--cmc-primary), var(--cmc-accent));
+}
+body.cmc-skel-2 .cmc-policy-hero.cmc-hero--rich,
+body.cmc-skel-2 .cmc-policy-hero.cmc-hero--split,
+body.cmc-skel-2 .cmc-policy-hero.cmc-hero--soft {
+    background: linear-gradient(135deg, var(--cmc-primary) 0%, var(--cmc-accent) 100%);
+}
+body.cmc-skel-2 .cmc-policy-hero .cmc-page-title,
+body.cmc-skel-2 .cmc-policy-hero .cmc-lead,
+body.cmc-skel-2 .cmc-policy-hero .cmc-eyebrow {
+    color: #fff;
+}
+body.cmc-skel-2 .cmc-policy-hero .cmc-doc-meta__pill {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+body.cmc-skel-2 .cmc-policy-hero .cmc-doc-meta__key {
+    color: rgba(255, 255, 255, 0.75);
+}
+body.cmc-skel-2 .cmc-policy-item__num,
+body.cmc-skel-2 .cmc-policy-card__num {
+    background: var(--cmc-primary);
+    color: #fff;
+    font-weight: 800;
+}
+body.cmc-skel-2 .cmc-card-block--rich {
+    border-left-width: 6px;
+}
+
+/* ---------- skeleton-3 — Editorial / Serif ---------- */
+
+body.cmc-skel-3 .cmc-page-title,
+body.cmc-skel-3 .cmc-page-title--editorial,
+body.cmc-skel-3 .cmc-section h2,
+body.cmc-skel-3 .cmc-editorial-h2 {
+    font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+}
+body.cmc-skel-3 .cmc-page-title {
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    line-height: 1.18;
+}
+body.cmc-skel-3 .cmc-lead,
+body.cmc-skel-3 .cmc-lead--editorial {
+    font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+    font-size: 1.12rem;
+    line-height: 1.75;
+    color: #3f4654;
+}
+body.cmc-skel-3 .cmc-eyebrow {
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 0.92rem;
+    color: var(--cmc-primary);
+}
+body.cmc-skel-3 .cmc-policy-hero.cmc-hero--soft,
+body.cmc-skel-3 .cmc-policy-hero.cmc-hero--rich,
+body.cmc-skel-3 .cmc-bg--soft,
+body.cmc-skel-3 .cmc-offerings-panel {
+    background: var(--cmc-soft-bg);
+}
+body.cmc-skel-3 .cmc-offerings-panel {
+    border-color: var(--cmc-border-sub);
+}
+body.cmc-skel-3 .cmc-editorial-pullquote {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.55;
+    border-left-color: var(--cmc-primary);
+}
+body.cmc-skel-3 .cmc-editorial-h2--numbered::before,
+body.cmc-skel-3 .cmc-editorial-h2--numbered {
+    color: var(--cmc-primary);
+}
+body.cmc-skel-3 .cmc-policy-item__num,
+body.cmc-skel-3 .cmc-policy-card__num {
+    background: transparent;
+    color: var(--cmc-primary);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* ---------- skeleton-4 — Modern / Geometric ---------- */
+
+body.cmc-skel-4 .cmc-section {
+    --cmc-radius: 18px;
+}
+body.cmc-skel-4 .cmc-page-title,
+body.cmc-skel-4 .cmc-page-title--editorial {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+body.cmc-skel-4 .cmc-eyebrow {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--cmc-soft-bg);
+    color: var(--cmc-primary);
+    letter-spacing: 0.08em;
+}
+body.cmc-skel-4 .cmc-doc-meta__pill,
+body.cmc-skel-4 .cmc-card-block,
+body.cmc-skel-4 .cmc-card-block--rich,
+body.cmc-skel-4 .cmc-offerings-panel,
+body.cmc-skel-4 .cmc-quote-card--policy,
+body.cmc-skel-4 .cmc-policy-card,
+body.cmc-skel-4 .cmc-cta-banner {
+    border-radius: 18px;
+}
+body.cmc-skel-4 .cmc-policy-card {
+    background: linear-gradient(160deg, #ffffff 0%, var(--cmc-soft-bg) 100%);
+    border: 1px solid var(--cmc-border-sub);
+}
+body.cmc-skel-4 .cmc-policy-card__num {
+    background: linear-gradient(135deg, var(--cmc-primary), var(--cmc-accent));
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+body.cmc-skel-4 .cmc-policy-item__num {
+    background: linear-gradient(135deg, var(--cmc-primary), var(--cmc-accent));
+    color: #fff;
+    border-radius: 14px;
+    font-weight: 700;
+}
+body.cmc-skel-4 .cmc-editorial-h2--numbered::before {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--cmc-primary);
+    opacity: 0.85;
+}
+body.cmc-skel-4 .cmc-accent-bar {
+    height: 4px;
+    width: 56px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--cmc-primary), var(--cmc-accent));
+}
+body.cmc-skel-4 .cmc-cta-banner {
+    background: linear-gradient(135deg, var(--cmc-primary) 0%, var(--cmc-accent) 100%);
+    color: #fff;
+}
+body.cmc-skel-4 .cmc-cta-banner h2,
+body.cmc-skel-4 .cmc-cta-banner h3 {
+    color: #fff;
+}
+
+/* ---------- Email / tel links ----------
+ * Default theme colors mailto/tel with the primary hue, which turns muted
+ * against soft/tinted backgrounds (policy sections, meta pills). Force these
+ * links to inherit the surrounding text color so they stay legible. The
+ * CTA banner keeps white links (re-asserted below to win on specificity).
+ */
+.cmc-section a[href^="mailto:"],
+.cmc-section a[href^="tel:"] {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.cmc-section a[href^="mailto:"]:hover,
+.cmc-section a[href^="tel:"]:hover {
+    color: inherit;
+    text-decoration-thickness: 2px;
+}
+.cmc-cta-banner a[href^="mailto:"],
+.cmc-cta-banner a[href^="tel:"] {
+    color: #fff;
+}
+
+/* ---------- Contact CTA pill button (Contact Us "Email Us") ---------- *
+ * Overrides Flatsome's .button.primary which reuses the theme primary
+ * color and becomes invisible on the teal CTA banner. Render as a
+ * white pill with the primary color as text so it reads on any
+ * banner gradient.
+ */
+.cmc-contact-cta-wrap {
+    margin-top: 18px;
+    margin-bottom: 0;
+}
+.cmc-section .button.cmc-contact-cta,
+.cmc-cta-banner .button.cmc-contact-cta,
+.cmc-editorial-cta .button.cmc-contact-cta {
+    display: inline-block;
+    padding: 12px 28px;
+    margin: 0;
+    background: #fff !important;
+    color: var(--cmc-primary) !important;
+    border: 1px solid #fff !important;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    text-decoration: none !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+    min-height: 0;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.cmc-section .button.cmc-contact-cta:hover,
+.cmc-cta-banner .button.cmc-contact-cta:hover,
+.cmc-editorial-cta .button.cmc-contact-cta:hover {
+    transform: translateY(-1px);
+    background: var(--cmc-primary) !important;
+    color: #fff !important;
+    border-color: var(--cmc-primary) !important;
+    text-decoration: none !important;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+.cmc-section .button.cmc-contact-cta[disabled],
+.cmc-cta-banner .button.cmc-contact-cta[disabled],
+.cmc-editorial-cta .button.cmc-contact-cta[disabled] {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+}
+/* Editorial variant (skeleton-4) sits on a light background, so flip
+ * the colors: primary pill with white text. */
+.cmc-editorial-cta .button.cmc-contact-cta {
+    background: var(--cmc-primary) !important;
+    color: #fff !important;
+    border-color: var(--cmc-primary) !important;
+}
+.cmc-editorial-cta .button.cmc-contact-cta:hover {
+    background: var(--cmc-accent) !important;
+    border-color: var(--cmc-accent) !important;
+    color: #fff !important;
+}
+
+/* ---------- Contact form (mailto-based) ----------
+ * Pure HTML form whose submit handler (assets/public/js/contact-form.js)
+ * builds a mailto: URL from the fields and opens the user's mail app.
+ * Styles support both the dark CTA banner (skeletons 1/2/3) and the
+ * light editorial variant (skeleton 4).
+ */
+.cmc-contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 18px;
+    text-align: left;
+}
+.cmc-contact-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 600px) {
+    .cmc-contact-form__row { grid-template-columns: 1fr; }
+}
+.cmc-contact-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+.cmc-contact-form__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.92;
+}
+.cmc-contact-form__input,
+.cmc-contact-form__textarea {
+    width: 100%;
+    padding: 11px 14px;
+    font: inherit;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #fff;
+    color: #1a1a1a;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.cmc-contact-form__textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+}
+.cmc-contact-form__input:focus,
+.cmc-contact-form__textarea:focus {
+    outline: none;
+    border-color: var(--cmc-primary);
+    box-shadow: 0 0 0 3px rgba(46, 196, 182, 0.18);
+    background: #fff;
+}
+.cmc-contact-form__hp {
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+.cmc-contact-form__submit {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+/* Form inside the dark CTA banner — tint labels white, soften input
+ * borders so they don't clash with the gradient. */
+.cmc-cta-banner .cmc-contact-form__label {
+    color: rgba(255, 255, 255, 0.92);
+}
+.cmc-cta-banner .cmc-contact-form__input,
+.cmc-cta-banner .cmc-contact-form__textarea {
+    background: rgba(255, 255, 255, 0.96);
+    color: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+.cmc-cta-banner .cmc-contact-form__input:focus,
+.cmc-cta-banner .cmc-contact-form__textarea:focus {
+    border-color: #fff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+.cmc-cta-banner .cmc-contact-form__input::placeholder,
+.cmc-cta-banner .cmc-contact-form__textarea::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+/* Form inside the editorial variant — light bg, primary-tinted labels. */
+.cmc-editorial-cta .cmc-contact-form__label {
+    color: var(--cmc-primary);
+}
+.cmc-editorial-cta .cmc-contact-form__input,
+.cmc-editorial-cta .cmc-contact-form__textarea {
+    background: #fff;
+    color: #1a1a1a;
+    border-color: var(--cmc-border-sub);
+}
+.cmc-editorial-cta .cmc-contact-form__input:focus,
+.cmc-editorial-cta .cmc-contact-form__textarea:focus {
+    border-color: var(--cmc-primary);
+    box-shadow: 0 0 0 3px rgba(46, 196, 182, 0.18);
+}
+
+/* Split banner (skeleton-2): form sits in the right-hand body column,
+ * tighten top margin since the banner has a headline on the left. */
+.cmc-cta-banner--split .cmc-contact-form {
+    margin-top: 8px;
+}
+
+/* ---------- Tracking form wrapper ----------
+ * Applied by skeletons/track-your-order/* to frame the WooCommerce
+ * [woocommerce_order_tracking] form.
+ */
+.cmc-tracking-form {
+    margin: 24px 0 28px;
+    padding: 24px 26px;
+    background: var(--cmc-soft-bg);
+    border: 1px solid var(--cmc-border-sub);
+    border-radius: calc(var(--cmc-radius) + 2px);
+}
+.cmc-tracking-form h2 {
+    margin-top: 0;
+}
+.cmc-tracking-form .track_order,
+.cmc-tracking-form form {
+    margin-bottom: 0;
+}
