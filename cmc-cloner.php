@@ -31,9 +31,8 @@ define( 'CMC_CLONER_BASENAME', plugin_basename( __FILE__ ) );
  * `.github/workflows/release.yml` for the release-build pipeline.
  */
 if ( ! defined( 'CMC_CLONER_GITHUB_REPO' ) ) {
-    define( 'CMC_CLONER_GITHUB_REPO', '' ); // e.g. 'your-username/cmc-cloner'
+    define( 'CMC_CLONER_GITHUB_REPO', 'leebrosusderry/cmc-cloner' ); // e.g. 'your-username/cmc-cloner'
 }
-
 require_once CMC_CLONER_DIR . 'includes/class-plugin.php';
 
 CMC_Plugin::instance();
