@@ -3,7 +3,7 @@
  * Plugin Name: CMC Cloner
  * Plugin URI:  https://example.com/cmc-cloner
  * Description: AI-powered page cloner for Flatsome-based sites. Rewrites Refund / Return / Contact / About / Privacy and other policy pages to be GMC-compliant with per-site style variation.
- * Version:     0.9.11
+ * Version:     0.9.12
  * Author:      CMC
  * Text Domain: cmc-cloner
  * Requires at least: 6.0
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'CMC_CLONER_VERSION',  '0.9.11' );
+define( 'CMC_CLONER_VERSION',  '0.9.12' );
 define( 'CMC_CLONER_FILE',     __FILE__ );
 define( 'CMC_CLONER_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'CMC_CLONER_URL',      plugin_dir_url( __FILE__ ) );
