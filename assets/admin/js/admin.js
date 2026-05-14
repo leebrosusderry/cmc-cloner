@@ -1886,14 +1886,15 @@
                         '<div class="cmc-title-rewriter-sample__error">⚠ ' + escapeHtml(s.error) + '</div>' +
                         '</div>';
                 } else {
-                    // desc_status: "rewritten" (description replaced) or
-                    // "kept-original" (AI didn't produce a usable
-                    // description, only the title was updated).
+                    // desc_status: "rewritten" (AI gave a clean description) or
+                    // "placeholder" (AI output failed validation — a safe
+                    // generic placeholder was saved). The original supplier
+                    // description is NEVER kept anymore.
                     var descTag = '';
                     if (s.desc_status === 'rewritten') {
                         descTag = ' <span class="cmc-title-rewriter-sample__desc">+ description rewritten</span>';
-                    } else if (s.desc_status === 'kept-original') {
-                        descTag = ' <span class="cmc-title-rewriter-sample__desc cmc-title-rewriter-sample__desc--kept">desc kept original</span>';
+                    } else if (s.desc_status === 'placeholder') {
+                        descTag = ' <span class="cmc-title-rewriter-sample__desc cmc-title-rewriter-sample__desc--kept">desc set to placeholder</span>';
                     }
                     html =
                         '<div class="cmc-title-rewriter-sample">' +
@@ -2852,8 +2853,8 @@
         }
 
         function selectedSteps() {
-            // Preserve the timeline order (cat → title → sku → review → image → regen → guidheal)
-            var order = ['cat', 'title', 'sku', 'review', 'image', 'regen', 'guidheal'];
+            // Preserve the timeline order (cat → title → sku → varnorm → review → image → regen → guidheal → sizeguide)
+            var order = ['cat', 'title', 'sku', 'varnorm', 'review', 'image', 'regen', 'guidheal', 'sizeguide'];
             return order.filter(function (id) {
                 return $checkboxes.filter('[value="' + id + '"]:checked').length > 0;
             });
@@ -2953,24 +2954,28 @@
 
         function stepLabel(stepId) {
             return ({
-                cat:      'Rename Category Name',
-                title:    'Rewrite Title & Description',
-                sku:      'SKU Normalize',
-                review:   'Seed Product Reviews',
-                image:    'Product Image Rename',
-                regen:    'Regenerate Image Thumbnails',
-                guidheal: 'Heal Stale Attachment GUIDs'
+                cat:       'Rename Category Name',
+                title:     'Rewrite Title & Description',
+                sku:       'SKU Normalize',
+                varnorm:   'Normalize Variation Attributes',
+                review:    'Seed Product Reviews',
+                image:     'Product Image Rename',
+                regen:     'Regenerate Image Thumbnails',
+                guidheal:  'Heal Stale Attachment GUIDs',
+                sizeguide: 'Sync Size Guide Page'
             })[stepId] || stepId;
         }
 
         function runStep(stepId) {
-            if (stepId === 'cat')      { return runRenameCategory(); }
-            if (stepId === 'title')    { return runTitleRewrite(stepId); }
-            if (stepId === 'sku')      { return runSkuNormalize(stepId); }
-            if (stepId === 'review')   { return runSeedReviews(stepId); }
-            if (stepId === 'image')    { return runImageRename(stepId); }
-            if (stepId === 'regen')    { return runImageRegen(stepId); }
-            if (stepId === 'guidheal') { return runHealGuids(stepId); }
+            if (stepId === 'cat')       { return runRenameCategory(); }
+            if (stepId === 'title')     { return runTitleRewrite(stepId); }
+            if (stepId === 'sku')       { return runSkuNormalize(stepId); }
+            if (stepId === 'varnorm')   { return runVariationNormalize(stepId); }
+            if (stepId === 'review')    { return runSeedReviews(stepId); }
+            if (stepId === 'image')     { return runImageRename(stepId); }
+            if (stepId === 'regen')     { return runImageRegen(stepId); }
+            if (stepId === 'guidheal')  { return runHealGuids(stepId); }
+            if (stepId === 'sizeguide') { return runSizeGuide(stepId); }
             return Promise.resolve({ success: false, summary: 'unknown step' });
         }
 
@@ -3093,6 +3098,74 @@
                     loop();
                 })
                 .fail(function () { resolve({ success: false, summary: 'scan network error' }); });
+            });
+        }
+
+        /* ---- Step 3b: Normalize Variation Attributes ----
+         * Walks every product-attribute term (pa_color, pa_size,
+         * pa_material, pa_capacity, plus generic pa_*) and rewrites
+         * messy Amazon imports ("01black" → "Black", "Light Pink 1"
+         * merged with "Light Pink", etc.). Paginated so a catalogue
+         * with thousands of variations stays inside the LSAPI budget.
+         */
+        function runVariationNormalize(stepId) {
+            var BATCH = 100;
+            return new Promise(function (resolve) {
+                var action = CMCCloner.actions && CMCCloner.actions.variationNormalizeBatch;
+                if (!action) {
+                    resolve({ success: false, summary: 'variationNormalizeBatch action missing — reload the page' });
+                    return;
+                }
+                var totals = { processed: 0, renamed: 0, merged: 0, skipped: 0, total: 0, dedupe_deleted: 0 };
+                var offset = 0;
+
+                function step() {
+                    if (cancelled) { resolve({ success: false, summary: 'cancelled mid-step' }); return; }
+                    $.ajax({
+                        url:     CMCCloner.ajaxUrl,
+                        type:    'POST',
+                        timeout: 180000,
+                        data: {
+                            action:     action,
+                            nonce:      CMCCloner.nonce,
+                            offset:     offset,
+                            batch_size: BATCH
+                        }
+                    })
+                    .done(function (res) {
+                        if (!res || !res.success) {
+                            resolve({ success: false, summary: 'batch failed at offset ' + offset });
+                            return;
+                        }
+                        var d = res.data || {};
+                        totals.processed += (d.processed | 0);
+                        totals.renamed   += (d.renamed   | 0);
+                        totals.merged    += (d.merged    | 0);
+                        totals.skipped   += (d.skipped   | 0);
+                        totals.total      = (d.total     | 0);
+                        // dedupe_deleted only arrives on the final batch
+                        if (d.dedupe_deleted) { totals.dedupe_deleted = (d.dedupe_deleted | 0); }
+
+                        var nextOffset = (d.next_offset | 0);
+                        var pct = totals.total ? Math.min(100, Math.round((nextOffset / totals.total) * 100)) : 100;
+                        setStepLog(stepId, nextOffset + ' / ' + totals.total + ' (' + pct + '%) — ' + totals.renamed + ' renamed, ' + totals.merged + ' merged');
+
+                        if (d.done) {
+                            var summary = totals.renamed + ' renamed, ' + totals.merged + ' merged out of ' + totals.total + ' term(s)';
+                            if (totals.dedupe_deleted > 0) {
+                                summary += ' · ' + totals.dedupe_deleted + ' duplicate variation(s) cleaned up';
+                            }
+                            resolve({ success: true, summary: summary });
+                            return;
+                        }
+                        offset = nextOffset;
+                        step();
+                    })
+                    .fail(function (xhr, status) {
+                        resolve({ success: false, summary: (status === 'timeout' ? 'timed out' : 'network error') + ' at offset ' + offset });
+                    });
+                }
+                step();
             });
         }
 
@@ -3413,6 +3486,48 @@
                     });
                 }
                 step();
+            });
+        }
+
+        /* ---- Step 9: Ensure Size Guide Page ----
+         * Single AJAX call. Server handles: industry gate → create empty
+         * page if missing → build prompt → AI → save (which triggers the
+         * cmc_cloner_page_updated action that auto-attaches the page to
+         * the footer menu). Idempotent — already-generated pages are
+         * left untouched. */
+        function runSizeGuide(stepId) {
+            return new Promise(function (resolve) {
+                var action = CMCCloner.actions && CMCCloner.actions.runAllSizeGuide;
+                if (!action) {
+                    resolve({ success: false, summary: 'runAllSizeGuide action missing — reload the page' });
+                    return;
+                }
+                setStepLog(stepId, 'checking industry + syncing page…');
+                $.ajax({
+                    url:     CMCCloner.ajaxUrl,
+                    type:    'POST',
+                    timeout: 120000,
+                    data: {
+                        action: action,
+                        nonce:  CMCCloner.nonce
+                    }
+                })
+                .done(function (res) {
+                    if (!res || !res.success) {
+                        var em = (res && res.data && res.data.message) || 'failed';
+                        resolve({ success: false, summary: em });
+                        return;
+                    }
+                    var d = res.data || {};
+                    if (d.skipped) {
+                        resolve({ success: true, summary: d.message || 'skipped' });
+                        return;
+                    }
+                    resolve({ success: true, summary: d.message || 'done' });
+                })
+                .fail(function (xhr, status) {
+                    resolve({ success: false, summary: status === 'timeout' ? 'AI call timed out' : 'network error' });
+                });
             });
         }
 

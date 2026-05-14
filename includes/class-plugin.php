@@ -39,15 +39,19 @@ final class CMC_Plugin {
         require_once $base . 'class-page-reader.php';
         require_once $base . 'class-page-writer.php';
         require_once $base . 'class-content-sanitizer.php';
+        require_once $base . 'class-industry-blacklist.php';
+        require_once $base . 'class-content-validator.php';
         require_once $base . 'class-skeleton-registry.php';
         require_once $base . 'class-variation-engine.php';
         require_once $base . 'class-prompt-builder.php';
         require_once $base . 'class-image-renamer.php';
+        require_once $base . 'class-variation-normalizer.php';
         require_once $base . 'class-products-eraser.php';
         require_once $base . 'class-sku-normalizer.php';
         require_once $base . 'class-title-rewriter.php';
         require_once $base . 'class-review-seeder.php';
         require_once $base . 'class-pages-controller.php';
+        require_once $base . 'class-size-guide.php';
         require_once $base . 'class-setup-controller.php';
         require_once $base . 'class-ajax.php';
         require_once $base . 'class-admin-menu.php';
@@ -78,6 +82,7 @@ final class CMC_Plugin {
         CMC_Admin_Menu::init();
         CMC_Image_Renamer::init();
         CMC_Schema::init();
+        CMC_Size_Guide::init();
 
         if ( is_admin() ) {
             CMC_Settings::init();

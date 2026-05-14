@@ -19,17 +19,25 @@ final class CMC_Settings {
      * GMC-safe defaults instead of an empty string.
      */
     public const SERVICE_DEFAULTS = [
-        'gio_lam_viec'           => 'Monday – Saturday, 8:00 AM – 5:00 PM (MST). Closed: Sunday & US Public Holidays',
-        'response_time'          => 'within 1 business day',
-        'rma_issuance_time'      => 'within 2 business days of approval',
-        'refund_processing_time' => 'within 5 business days after we receive the returned item',
+        'gio_lam_viec'             => 'Monday – Saturday, 8:00 AM – 5:00 PM (MST). Closed: Sunday & US Public Holidays',
+        'response_time'            => 'within 1 business day',
+        'rma_issuance_time'        => 'within 2 business days of approval',
+        'refund_processing_time'   => 'within 5 business days after we receive the returned item',
+        // Cancellation refund time — separate from refund_processing_time
+        // because the cancellation flow has NO returned item to wait on.
+        // Default is the bare duration; the Cancellation Policy template
+        // appends "after cancellation approval" itself so the slot value
+        // never carries return-flow phrasing. Keep these two values in
+        // sync by default — most stores want the same refund duration
+        // for both contexts.
+        'cancellation_refund_time' => '5 business days',
         // Return window — the period during which the customer may
         // initiate a return after delivery. Default 30 days fits clothing
         // / general merchandise; override for niche-specific shops (food
         // ~14 days, mattresses ~100 nights, electronics ~30 days). Plain
         // duration phrasing — the prompts append "from the date of
         // delivery" themselves so a value like "30 days" reads naturally.
-        'return_window'          => '30 days',
+        'return_window'            => '30 days',
     ];
 
     /**
@@ -273,10 +281,11 @@ final class CMC_Settings {
                 'nganh_hang'             => 'fashion',
                 'dinh_huong_san_pham'    => '',
                 'gio_lam_viec'           => '',
-                'response_time'          => '',
-                'rma_issuance_time'      => '',
-                'refund_processing_time' => '',
-                'return_window'          => '',
+                'response_time'            => '',
+                'rma_issuance_time'        => '',
+                'refund_processing_time'   => '',
+                'cancellation_refund_time' => '',
+                'return_window'            => '',
             ],
         ];
     }
@@ -573,10 +582,11 @@ final class CMC_Settings {
             'nganh_hang'             => isset( $nganh_options[ $nganh_posted ] ) ? $nganh_posted : array_key_first( $nganh_options ),
             'dinh_huong_san_pham'    => $pick_text( 'dinh_huong_san_pham' ),
             'gio_lam_viec'           => $pick_text( 'gio_lam_viec' ),
-            'response_time'          => $pick_text( 'response_time' ),
-            'rma_issuance_time'      => $pick_text( 'rma_issuance_time' ),
-            'refund_processing_time' => $pick_text( 'refund_processing_time' ),
-            'return_window'          => $pick_text( 'return_window' ),
+            'response_time'            => $pick_text( 'response_time' ),
+            'rma_issuance_time'        => $pick_text( 'rma_issuance_time' ),
+            'refund_processing_time'   => $pick_text( 'refund_processing_time' ),
+            'cancellation_refund_time' => $pick_text( 'cancellation_refund_time' ),
+            'return_window'            => $pick_text( 'return_window' ),
         ];
 
         update_option( self::OPTION_KEY, $new );
@@ -737,6 +747,16 @@ final class CMC_Settings {
                 // exact home_url. Cloning to a new domain resets this flag
                 // because the source value won't match the new home_url.
                 'podSetupDone' => ( (string) get_option( 'cmc_pod_setup_done_for', '' ) === home_url() ),
+                // Whether the niche-specific Size Guide step is relevant
+                // for the configured industry. Drives the Run-All UI:
+                // false → checkbox + timeline row hidden entirely.
+                'sizeGuideApplies' => CMC_Template_Registry::applies_to_industry(
+                    'size-guide',
+                    trim( (string) ( $s['company_info']['nganh_hang'] ?? '' )
+                        . ' '
+                        . (string) ( CMC_Shortcodes::nganh_hang_options()[ $s['company_info']['nganh_hang'] ?? '' ] ?? '' )
+                    )
+                ),
                 'actions'     => [
                     'test'          => CMC_Ajax::ACTION_TEST,
                     'load'          => CMC_Ajax::ACTION_LOAD,
@@ -763,6 +783,8 @@ final class CMC_Settings {
                     'runAllPickCat'       => CMC_Ajax::ACTION_RUN_ALL_PICK_CAT,
                     'runAllPodMarkDone'   => CMC_Ajax::ACTION_RUN_ALL_POD_MARK_DONE,
                     'runAllHealGuids'     => CMC_Ajax::ACTION_RUN_ALL_HEAL_GUIDS,
+                    'runAllSizeGuide'     => CMC_Ajax::ACTION_RUN_ALL_SIZE_GUIDE,
+                    'variationNormalizeBatch' => CMC_Ajax::ACTION_VARIATION_NORMALIZE_BATCH,
                     'reviewScan'          => CMC_Ajax::ACTION_REVIEW_SCAN,
                     'reviewSeed'          => CMC_Ajax::ACTION_REVIEW_SEED,
                     'reviewAiPolishOne'   => CMC_Ajax::ACTION_REVIEW_AI_POLISH_ONE,

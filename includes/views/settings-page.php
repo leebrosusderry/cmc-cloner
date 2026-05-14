@@ -304,7 +304,7 @@ $gemini_key_plain = CMC_Settings::get_api_key( 'gemini' );
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="ci_refund_processing_time"><code>[refund-time]</code> Refund processing time</label></th>
+                        <th scope="row"><label for="ci_refund_processing_time"><code>[refund-time]</code> Refund processing time (returns)</label></th>
                         <td>
                             <input type="text"
                                    name="company_info[refund_processing_time]"
@@ -312,7 +312,19 @@ $gemini_key_plain = CMC_Settings::get_api_key( 'gemini' );
                                    class="large-text"
                                    value="<?php echo esc_attr( $s['company_info']['refund_processing_time'] ); ?>"
                                    placeholder="<?php echo esc_attr( CMC_Settings::SERVICE_DEFAULTS['refund_processing_time'] ); ?>" />
-                            <p class="description">How long the refund takes to land on the customer's card. <?php CMC_UI::help( 'Used in Refund Policy and Cancellation Policy. Inserted verbatim — e.g. <code>within 5 business days after we receive the returned item</code>.' ); ?></p>
+                            <p class="description">How long a RETURN refund takes — measured from when the returned item arrives at the warehouse. <?php CMC_UI::help( 'Used in Return &amp; Refund Policy. Inserted verbatim — e.g. <code>within 5 business days after we receive the returned item</code>.' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="ci_cancellation_refund_time"><code>[cancellation-time]</code> Cancellation refund time</label></th>
+                        <td>
+                            <input type="text"
+                                   name="company_info[cancellation_refund_time]"
+                                   id="ci_cancellation_refund_time"
+                                   class="regular-text"
+                                   value="<?php echo esc_attr( $s['company_info']['cancellation_refund_time'] ?? '' ); ?>"
+                                   placeholder="<?php echo esc_attr( CMC_Settings::SERVICE_DEFAULTS['cancellation_refund_time'] ); ?>" />
+                            <p class="description">How long a CANCELLATION refund takes — measured from cancellation approval (no returned item involved). <?php CMC_UI::help( '<p>Used in Cancellation Policy. The page template appends "after cancellation approval" automatically, so enter only the bare duration: <code>5 business days</code>, <code>3–5 business days</code>, etc.</p><p>Separate from <code>[refund-time]</code> because the cancellation flow has no returned item to wait on — using the same string there would produce a GMC-flagged contradiction ("refund after we receive the returned item" on a page about pre-dispatch cancellations).</p>' ); ?></p>
                         </td>
                     </tr>
                     <tr>

@@ -13,7 +13,7 @@ final class CMC_Shortcodes {
 
     public const TAGS = [
         'dia-chi', 'so-dien-thoai', 'email-web', 'ten-web', 'ten-website', 'ten-doanh-nghiep', 'nganh-hang',
-        'gio-lam-viec', 'response-time', 'rma-time', 'refund-time',
+        'gio-lam-viec', 'response-time', 'rma-time', 'refund-time', 'cancellation-time',
     ];
 
     public static function register(): void {
@@ -33,6 +33,7 @@ final class CMC_Shortcodes {
         add_shortcode( 'response-time',    [ self::class, 'sc_response_time' ] );
         add_shortcode( 'rma-time',         [ self::class, 'sc_rma_time' ] );
         add_shortcode( 'refund-time',      [ self::class, 'sc_refund_time' ] );
+        add_shortcode( 'cancellation-time',[ self::class, 'sc_cancellation_time' ] );
 
         if ( is_admin() ) {
             add_action( 'admin_notices', [ self::class, 'maybe_conflict_notice' ] );
@@ -157,6 +158,14 @@ final class CMC_Shortcodes {
 
     public static function sc_refund_time(): string {
         return esc_html( CMC_Settings::service_commitment( 'refund_processing_time' ) );
+    }
+
+    public static function sc_cancellation_time(): string {
+        // Hard-fallback to "5 business days" if the settings chain
+        // returns empty — the shortcode MUST always render a real
+        // duration to keep generated copy GMC-safe.
+        $value = trim( (string) CMC_Settings::service_commitment( 'cancellation_refund_time' ) );
+        return esc_html( $value !== '' ? $value : '5 business days' );
     }
 
     public static function maybe_conflict_notice(): void {

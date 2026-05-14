@@ -41,44 +41,80 @@ final class CMC_Title_Rewriter {
     public const META_ORIGINAL_DESC      = '_cmc_original_description';
     public const META_ORIGINAL_SLUG      = '_cmc_original_slug';
     public const META_REWRITTEN_AT       = '_cmc_title_rewritten_at';
+    // Soft-fail marker: title saved BUT some Amazon-shape rules were
+    // still tripped after 2 attempts. The product is removed from the
+    // batch queue (won't infinite-retry) and flagged for admin review.
+    public const META_VALIDATION_WARNING = '_cmc_title_validation_warning';
+    // Hard-fail marker: AI produced output that violates a critical
+    // rule (protected brand, ALL-CAPS, etc.) on both attempts. The
+    // original title is kept; product is removed from the batch queue
+    // so the rewriter doesn't loop forever. Operator can revert + retry.
+    public const META_PROCESSING_ERROR   = '_cmc_title_processing_error';
+    // Soft signal: AI description was saved but tripped a quality
+    // check (too short, too long, possible brand leak). The
+    // description still went live — this meta only flags the row for
+    // admin review so a future pass can scan for products that need
+    // manual cleanup.
+    public const META_DESC_QUALITY_WARNING = '_cmc_desc_quality_warning';
 
     /**
      * Title length band. Outside = treat as AI garbage and keep the
      * original.
-     */
-    private const MIN_LEN     = 30;
-    private const MAX_LEN     = 140;
-    private const TARGET_MIN  = 40;
-    private const TARGET_MAX  = 100;
-
-    /**
-     * Description length band — measured AFTER stripping HTML tags so
-     * "100–300 words ≈ 600–2000 chars of plain text" is what we
-     * actually validate. The HTML wrapper (`<p>`, `<ul>`, `<li>` etc.)
-     * adds maybe 100–300 chars on top — generous upper bound 3000 to
-     * accommodate that.
-     */
-    private const DESC_MIN_TEXT_LEN = 200;
-    private const DESC_MAX_HTML_LEN = 3000;
-
-    /**
-     * HTML tags allowed in the description output. Anything else is
-     * stripped via wp_kses() — script/style/img/iframe/h1-h6/table
-     * etc. all dropped. Six tags are enough for "intro paragraph +
-     * bullet list + closing paragraph".
      *
-     * @return array<string,array<string,bool>>
+     * The current numbers target a "store-catalogue" voice (4–7 words,
+     * 25–65 chars) instead of the marketplace "attribute-stacked" shape
+     * (Amazon listings routinely hit 8–15 words and 100+ chars). GMC
+     * reviewers flag long attribute-stacked titles as "still looks like
+     * a supplier listing" even when no specific brand words are present
+     * — the SHAPE itself is the giveaway. Keeping titles short forces
+     * the model to pick the ONE primary attribute instead of stacking.
      */
-    private static function description_allowed_html(): array {
-        return [
-            'p'      => [],
-            'ul'     => [],
-            'li'     => [],
-            'strong' => [],
-            'em'     => [],
-            'br'     => [],
-        ];
-    }
+    // MIN_LEN guards against AI fragments ("Mug", "Hat", "Ring") — bare
+    // 1-word outputs that lost product context. Anything ≥10 chars is
+    // a real store-voice title ("Plush Toy" = 9 → still fails; "Wool
+    // Throw" = 10 → passes). Earlier this was 25, which mistakenly
+    // killed every clean 3-word title the new store-voice prompt
+    // explicitly recommends ("12-Inch Plush Toy" = 17 chars,
+    // "Plug-in Pest Repellent" = 22 chars). The mismatch made ~40%
+    // of products fail HARD validation despite the AI doing its job.
+    private const MIN_LEN     = 10;
+    private const MAX_LEN     = 65;     // SOFT ceiling — over this triggers a warning, not a reject
+    private const TARGET_MIN  = 10;
+    private const TARGET_MAX  = 65;
+    private const MAX_WORDS   = 7;      // SOFT ceiling — over this triggers a warning, not a reject
+    // HARD ceilings — over these, the title is rejected outright and
+    // the product is flagged with META_PROCESSING_ERROR so the batch
+    // doesn't keep retrying a product the model can't size-down on.
+    private const HARD_MAX_LEN   = 90;
+    private const HARD_MAX_WORDS = 10;
+
+    /**
+     * Description length band — measured on PLAIN TEXT (no HTML).
+     *
+     * AI outputs plain text (no `<p>`, `<ul>`, `<li>`, `<strong>`)
+     * because page builders (Flatsome, Elementor, Divi) apply theme
+     * styling to `<ul>` / `<strong>` inconsistently and sometimes
+     * break the product-detail layout. wpautop() on the front-end
+     * wraps each paragraph in `<p>` automatically — same visual
+     * outcome with zero risk.
+     *
+     * Length targets (updated): ~120–200 words (≈600–1200 chars).
+     * Three paragraphs instead of two: an intro + a details prose
+     * paragraph + a feature line. Hard floor 100 chars filters true
+     * fragments; hard ceiling 2500 chars gives generous headroom.
+     */
+    private const DESC_MIN_TEXT_LEN  = 100;
+    private const DESC_MAX_TEXT_LEN  = 2500;   // hard ceiling
+    private const DESC_TARGET_MIN    = 600;    // soft floor (~120 words)
+    private const DESC_TARGET_MAX    = 1300;   // soft ceiling (~250 words)
+
+    /**
+     * Generic placeholder used when the AI couldn't produce a usable
+     * description (validation failed or AI catastrophically failed).
+     * Short, GMC-safe, applicable to any industry. Defined once here
+     * so both fallback paths use the exact same string.
+     */
+    private const DESC_FALLBACK_PLACEHOLDER = 'Please refer to the product images and the title for details and specifications.';
 
     /**
      * Count products eligible for rewrite. Excludes the auto-draft +
@@ -135,44 +171,66 @@ final class CMC_Title_Rewriter {
         // Raise budgets so multi-second AI calls don't trip LSAPI.
         @set_time_limit( 120 );
 
-        // Eligible IDs = products that don't yet have the rewritten-at
-        // marker. ORDER BY ID ASC keeps the loop deterministic so a
-        // re-run after a partial failure picks up where it left off.
+        // Auto-clear stale processing-error markers from previous runs.
+        // Without this, products that failed under an older code version
+        // (e.g. when MIN_LEN was 25 and false-rejected clean 17-char
+        // titles) stay parked forever and the batch reports done=true
+        // while those products still have their original supplier
+        // titles. With the current code path catastrophic failures
+        // re-mark on retry, so this cleanup is cost-free for genuine
+        // failures and unblocks legacy false-positives in one shot.
+        $wpdb->delete( $wpdb->postmeta, [ 'meta_key' => self::META_PROCESSING_ERROR ] );
+
+        // Eligible IDs = products without the rewritten-at marker.
+        // The processing-error marker is no longer used as an exclusion
+        // gate (cleared above on every batch call) — the only marker
+        // that removes a product from the queue is rewritten-at, which
+        // is set on EVERY successful save including save-with-warning.
+        // ORDER BY ID ASC keeps the loop deterministic so a re-run
+        // picks up where it left off.
         $ids = (array) $wpdb->get_col( $wpdb->prepare(
             "SELECT p.ID
                FROM {$wpdb->posts} p
-               LEFT JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
-                                              AND pm.meta_key = %s
+               LEFT JOIN {$wpdb->postmeta} pm_done ON pm_done.post_id = p.ID
+                                                  AND pm_done.meta_key = %s
               WHERE p.post_type   = 'product'
                 AND p.post_status NOT IN ('auto-draft','trash')
-                AND pm.meta_id IS NULL
+                AND pm_done.meta_id IS NULL
               ORDER BY p.ID ASC
               LIMIT %d",
             self::META_REWRITTEN_AT,
             $limit
         ) );
 
-        $processed = 0;
-        $succeeded = 0;
-        $failed    = 0;
-        $skipped   = 0;
-        $samples   = [];
+        $processed     = 0;
+        $succeeded     = 0;
+        $warned_hard   = 0;  // saved but with HARD severity warning (urgent review)
+        $warned_soft   = 0;  // saved but with SOFT severity warning (optional review)
+        $failed        = 0;  // catastrophic AI failure — no title saved
+        $skipped       = 0;
+        $samples       = [];
 
         foreach ( $ids as $id ) {
             $id  = (int) $id;
             $res = self::rewrite_product( $id );
             $processed++;
 
-            if ( $res['status'] === 'ok' ) {
+            $status   = (string) ( $res['status'] ?? '' );
+            $severity = (string) ( $res['severity'] ?? '' );
+            if ( $status === 'ok' || $status === 'ok_with_warning' ) {
                 $succeeded++;
+                if ( $severity === 'hard' ) { $warned_hard++; }
+                if ( $severity === 'soft' ) { $warned_soft++; }
                 if ( count( $samples ) < 5 ) {
                     $samples[] = [
-                        'id'     => $id,
-                        'before' => (string) $res['before'],
-                        'after'  => (string) $res['after'],
+                        'id'       => $id,
+                        'before'   => (string) $res['before'],
+                        'after'    => (string) $res['after'],
+                        'severity' => $severity ?: null,
+                        'warning'  => ( $severity !== '' ) ? (array) ( $res['warning'] ?? [] ) : null,
                     ];
                 }
-            } elseif ( $res['status'] === 'skipped' ) {
+            } elseif ( $status === 'skipped' ) {
                 $skipped++;
             } else {
                 $failed++;
@@ -181,7 +239,7 @@ final class CMC_Title_Rewriter {
                         'id'     => $id,
                         'before' => (string) $res['before'],
                         'after'  => '',
-                        'error'  => (string) $res['error'],
+                        'error'  => (string) ( $res['error'] ?? '' ),
                     ];
                 }
             }
@@ -189,13 +247,16 @@ final class CMC_Title_Rewriter {
 
         $remaining = self::count_remaining();
         return [
-            'processed' => $processed,
-            'succeeded' => $succeeded,
-            'failed'    => $failed,
-            'skipped'   => $skipped,
-            'remaining' => $remaining,
-            'done'      => ( $remaining === 0 ),
-            'samples'   => $samples,
+            'processed'   => $processed,
+            'succeeded'   => $succeeded,
+            'warned_hard' => $warned_hard,
+            'warned_soft' => $warned_soft,
+            'warned'      => $warned_hard + $warned_soft, // legacy alias
+            'failed'      => $failed,
+            'skipped'     => $skipped,
+            'remaining'   => $remaining,
+            'done'        => ( $remaining === 0 ),
+            'samples'     => $samples,
         ];
     }
 
@@ -231,56 +292,176 @@ final class CMC_Title_Rewriter {
             return [ 'status' => 'skipped', 'before' => '', 'after' => '' ];
         }
 
-        try {
-            $raw = self::ai_rewrite( $title_before, $desc_before );
-        } catch ( \Throwable $t ) {
+        // Up to 2 attempts per product with HARD / SOFT tiered validation.
+        //
+        // After the loop ends, the outcome is exactly one of:
+        //   (a) CLEAN     — HARD pass + SOFT pass → save title, mark done.
+        //   (b) WARNING   — HARD pass + SOFT fail (after 2 attempts) → save
+        //                   title anyway, stamp META_VALIDATION_WARNING so
+        //                   the admin UI can flag it for review, mark done.
+        //   (c) ERROR     — HARD fail (after 2 attempts) → don't save,
+        //                   stamp META_PROCESSING_ERROR so the batch loop
+        //                   removes the product from the queue (no
+        //                   infinite retry). Operator can revert + retry.
+        //
+        // Outcomes (b) and (c) BOTH guarantee 1-pass processing — the
+        // product never gets reprocessed by the next batch run.
+        $max_attempts    = 2;
+        $title_after     = '';
+        $parsed          = null;
+        $tiered          = [ 'hard' => [], 'soft' => [] ];
+        $retry_feedback  = '';
+        $last_raw        = '';
+        $last_error      = '';
+        $had_ai_failure  = false;
+
+        for ( $attempt = 1; $attempt <= $max_attempts; $attempt++ ) {
+            try {
+                $last_raw = self::ai_rewrite( $title_before, $desc_before, $retry_feedback );
+            } catch ( \Throwable $t ) {
+                $last_error      = 'AI: ' . $t->getMessage();
+                $had_ai_failure  = true;
+                continue;
+            }
+
+            $parsed = self::parse_json_output( $last_raw );
+            if ( ! is_array( $parsed ) || empty( $parsed['title'] ) ) {
+                $last_error     = 'AI returned invalid JSON / missing title field';
+                $had_ai_failure = true;
+                $retry_feedback = "PREVIOUS ATTEMPT FAILED: the output was not a valid JSON object with non-empty `title` and `description` keys. Return EXACTLY the JSON object shape specified above — no markdown fences, no commentary.\n\n";
+                continue;
+            }
+
+            $title_after = self::sanitise_output( (string) $parsed['title'] );
+            $tiered      = self::validation_reasons_tiered( $title_after );
+
+            if ( $tiered['hard'] === [] && $tiered['soft'] === [] ) {
+                break; // clean — exit the loop
+            }
+
+            // Build the retry feedback footer with the combined HARD + SOFT
+            // reasons so the model knows exactly what to fix.
+            $all = array_merge( $tiered['hard'], $tiered['soft'] );
+            $last_error     = sprintf(
+                'Title validation failed: %s — AI output was: "%s"',
+                implode( '; ', $all ),
+                $title_after
+            );
+            $retry_feedback = sprintf(
+                "PREVIOUS ATTEMPT FAILED with title \"%s\". Reasons:\n  - %s\nRe-generate the title with these specific issues fixed. Stay inside the BANNED shape patterns list above. Keep the description structure unchanged unless that part also failed.\n\n",
+                $title_after,
+                implode( "\n  - ", $all )
+            );
+        }
+
+        // Outcome (c) CATASTROPHIC — AI threw, or returned malformed JSON,
+        // on BOTH attempts. We have no title to save. Stamp the error
+        // marker so the next batch run knows this product needs a
+        // retry; operator can clear the marker + retry later.
+        //
+        // 100% description-overwrite guarantee: even though the title
+        // stays as the (Amazon) original here, the description MUST
+        // be overwritten with the safe placeholder — otherwise the
+        // long marketplace-style description survives and gets
+        // flagged by GMC review. The inconsistent visual state
+        // (Amazon title + placeholder description) is itself the
+        // operator's signal that "this product needs to be re-run".
+        if ( $had_ai_failure && ( ! is_array( $parsed ) || empty( $parsed['title'] ) ) ) {
+            // Snapshot original description ONCE so revert can restore
+            // it exactly. Same metadata_exists() guard as the success
+            // path so a previous snapshot isn't overwritten.
+            if ( ! metadata_exists( 'post', $product_id, self::META_ORIGINAL_DESC ) ) {
+                add_post_meta( $product_id, self::META_ORIGINAL_DESC, $desc_before, true );
+            }
+            wp_update_post( [
+                'ID'           => $product_id,
+                'post_content' => self::DESC_FALLBACK_PLACEHOLDER,
+            ] );
+            clean_post_cache( $product_id );
+
+            update_post_meta( $product_id, self::META_PROCESSING_ERROR, [
+                'at'       => time(),
+                'reason'   => $last_error,
+                'attempts' => $max_attempts,
+                'severity' => 'catastrophic',
+            ] );
             return [
-                'status' => 'error',
-                'before' => $title_before,
-                'after'  => '',
-                'error'  => 'AI: ' . $t->getMessage(),
+                'status'      => 'error',
+                'before'      => $title_before,
+                'after'       => '',
+                'desc_status' => 'placeholder',
+                'error'       => $last_error !== ''
+                    ? $last_error . sprintf( ' (after %d attempt%s) — description overwritten with placeholder', $max_attempts, $max_attempts === 1 ? '' : 's' )
+                    : 'AI failed after retries; description overwritten with placeholder',
             ];
         }
 
-        $parsed = self::parse_json_output( $raw );
-        if ( ! is_array( $parsed ) || empty( $parsed['title'] ) ) {
-            return [
-                'status' => 'error',
-                'before' => $title_before,
-                'after'  => '',
-                'error'  => 'AI returned invalid JSON / missing title field',
-            ];
-        }
-
-        // ---- Title (required) ----
-        $title_after = self::sanitise_output( (string) $parsed['title'] );
-        $reasons     = self::validation_reasons( $title_after );
-        if ( $reasons !== [] ) {
-            // Show the AI's actual output so the operator can see what
-            // tripped the gate — combined with the specific rule list
-            // this turns "Title validation failed" from a black box
-            // into something actionable (operator can spot e.g.
-            // "Marvel-themed" leaking through and adjust the source
-            // description / blocklist filter).
-            return [
-                'status' => 'error',
-                'before' => $title_before,
-                'after'  => $title_after,
-                'error'  => sprintf(
-                    'Title validation failed: %s — AI output was: "%s"',
-                    implode( '; ', $reasons ),
-                    $title_after
-                ),
-            ];
-        }
+        // From here onward: we HAVE a title from the AI (even if it
+        // still trips validation). The 1-run-guarantee policy is: SAVE
+        // the AI output regardless of HARD/SOFT validation status — a
+        // partially-flawed title is still leagues better than the
+        // pre-rewrite supplier title, and the warning marker lets the
+        // admin review-and-fix the small minority that need cleanup.
+        //
+        //   - HARD reasons remain → save + HARD severity warning (review urgent)
+        //   - SOFT reasons remain → save + SOFT severity warning (review optional)
+        //   - No reasons          → save clean, no warning
+        //
+        // This change replaces the old "block HARD-failed titles" path,
+        // which left some products with their original supplier title
+        // and made the batch run look like it terminated early.
+        $hard_warning_reasons = $tiered['hard'];
+        $soft_warning_reasons = $tiered['soft'];
+        $warning_severity     = $hard_warning_reasons !== [] ? 'hard' : ( $soft_warning_reasons !== [] ? 'soft' : '' );
+        $warning_reasons_all  = array_merge( $hard_warning_reasons, $soft_warning_reasons );
 
         // ---- Description (best-effort) ----
         // If the AI gave us a clean description, we overwrite. If not,
         // we leave the original description in place and still keep the
         // new title — partial success is better than rejecting the row.
-        $desc_after_raw   = isset( $parsed['description'] ) ? (string) $parsed['description'] : '';
-        $desc_after_clean = self::sanitise_description( $desc_after_raw );
-        $desc_usable      = ( $desc_after_clean !== '' && self::passes_description_validation( $desc_after_clean ) );
+        // Description policy — ALWAYS save the AI-generated description
+        // when one exists, regardless of whether it matches the ideal
+        // length / format. Validation is no longer a hard gate: a
+        // slightly short or slightly long AI description is still leagues
+        // better than the generic placeholder. The only path that
+        // produces the placeholder now is "AI returned an empty
+        // description value" (parsed['description'] missing or after
+        // sanitization the string is empty) — which is genuinely rare.
+        //
+        // Brand-leaked descriptions (very rare on rewrites that ALREADY
+        // produced a clean title) still get saved here; the admin can
+        // review and fix manually. The trade-off matches the operator's
+        // explicit preference: never see the placeholder, accept that a
+        // tiny minority of descriptions may need manual cleanup.
+        $desc_after_raw    = isset( $parsed['description'] ) ? (string) $parsed['description'] : '';
+        $desc_after_clean  = self::sanitise_description( $desc_after_raw );
+
+        if ( $desc_after_clean !== '' ) {
+            $desc_to_save = $desc_after_clean;
+            $desc_status  = 'rewritten';
+            // Soft quality signal — stamp a meta when the description
+            // is unusually short, unusually long, or has a brand leak
+            // so an admin scan can surface "needs review" rows
+            // without blocking the save. The meta is cleared when the
+            // description is clean.
+            $desc_warning_reasons = self::description_quality_warnings( $desc_after_clean );
+            if ( $desc_warning_reasons !== [] ) {
+                update_post_meta( $product_id, self::META_DESC_QUALITY_WARNING, [
+                    'at'       => time(),
+                    'reasons'  => $desc_warning_reasons,
+                    'len'      => function_exists( 'mb_strlen' ) ? mb_strlen( $desc_after_clean ) : strlen( $desc_after_clean ),
+                ] );
+            } else {
+                delete_post_meta( $product_id, self::META_DESC_QUALITY_WARNING );
+            }
+        } else {
+            // AI legitimately gave no description content (parsed value
+            // was missing / empty / pure whitespace / pure HTML that
+            // stripped to nothing). Placeholder is the only option.
+            $desc_to_save = self::DESC_FALLBACK_PLACEHOLDER;
+            $desc_status  = 'placeholder';
+            delete_post_meta( $product_id, self::META_DESC_QUALITY_WARNING );
+        }
 
         // Save originals (once each) so revert can restore exactly.
         // We check `metadata_exists()` rather than an empty-string
@@ -291,17 +472,18 @@ final class CMC_Title_Rewriter {
         if ( ! metadata_exists( 'post', $product_id, self::META_ORIGINAL ) ) {
             add_post_meta( $product_id, self::META_ORIGINAL, $title_before, true );
         }
-        if ( $desc_usable && ! metadata_exists( 'post', $product_id, self::META_ORIGINAL_DESC ) ) {
+        // Always snapshot the original description before we overwrite
+        // (revert restores the exact pre-rewrite state regardless of
+        // whether the new content came from AI or the placeholder).
+        if ( ! metadata_exists( 'post', $product_id, self::META_ORIGINAL_DESC ) ) {
             add_post_meta( $product_id, self::META_ORIGINAL_DESC, $desc_before, true );
         }
 
         $update = [
-            'ID'         => $product_id,
-            'post_title' => $title_after,
+            'ID'           => $product_id,
+            'post_title'   => $title_after,
+            'post_content' => $desc_to_save,  // always overwrite
         ];
-        if ( $desc_usable ) {
-            $update['post_content'] = $desc_after_clean;
-        }
 
         // Re-derive the URL slug from the new title so /product/<slug>/
         // matches the rewritten title. Two pieces of WordPress core
@@ -345,13 +527,37 @@ final class CMC_Title_Rewriter {
 
         wp_update_post( $update );
         update_post_meta( $product_id, self::META_REWRITTEN_AT, time() );
+
+        // Warning marker. Set when the saved title still tripped HARD
+        // or SOFT reasons after retry — lets the admin UI surface
+        // "needs review" without blocking the catalogue. Severity =
+        // 'hard' for brand-leak / ALL-CAPS / oversize (review urgent),
+        // 'soft' for Amazon-shape patterns (review optional). Cleared
+        // when the title is clean so a re-run removes stale warnings.
+        if ( $warning_severity !== '' ) {
+            update_post_meta( $product_id, self::META_VALIDATION_WARNING, [
+                'at'       => time(),
+                'severity' => $warning_severity,
+                'reasons'  => $warning_reasons_all,
+                'title'    => $title_after,
+                'attempts' => $max_attempts,
+            ] );
+        } else {
+            delete_post_meta( $product_id, self::META_VALIDATION_WARNING );
+        }
+        // Clear any stale processing-error marker from a previous run
+        // — the title was saved, the product is no longer "errored".
+        delete_post_meta( $product_id, self::META_PROCESSING_ERROR );
+
         clean_post_cache( $product_id );
 
         return [
-            'status'      => 'ok',
+            'status'      => ( $warning_severity === '' ? 'ok' : 'ok_with_warning' ),
+            'severity'    => $warning_severity,    // '' / 'soft' / 'hard'
             'before'      => $title_before,
             'after'       => $title_after,
-            'desc_status' => $desc_usable ? 'rewritten' : 'kept-original',
+            'desc_status' => $desc_status, // 'rewritten' | 'placeholder' — original is never kept
+            'warning'     => $warning_reasons_all,
         ];
     }
 
@@ -441,13 +647,17 @@ final class CMC_Title_Rewriter {
 
     private static function count_remaining(): int {
         global $wpdb;
+        // Mirror rewrite_batch()'s eligibility filter: only the
+        // rewritten-at marker removes a product from the queue.
+        // Processing-error markers are auto-cleared at the start of
+        // every batch so they don't block legitimate retries.
         return (int) $wpdb->get_var( $wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->posts} p
-              LEFT JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
-                                             AND pm.meta_key = %s
+              LEFT JOIN {$wpdb->postmeta} pm_done ON pm_done.post_id = p.ID
+                                                 AND pm_done.meta_key = %s
               WHERE p.post_type   = 'product'
                 AND p.post_status NOT IN ('auto-draft','trash')
-                AND pm.meta_id IS NULL",
+                AND pm_done.meta_id IS NULL",
             self::META_REWRITTEN_AT
         ) );
     }
@@ -457,7 +667,7 @@ final class CMC_Title_Rewriter {
      * Uses tight settings (low temperature, capped tokens) because the
      * task is rule-following, not creativity.
      */
-    private static function ai_rewrite( string $original_title, string $original_description = '' ): string {
+    private static function ai_rewrite( string $original_title, string $original_description = '', string $retry_feedback = '' ): string {
         $protected = self::protected_brands_csv();
         $tmin      = (int) self::TARGET_MIN;
         $tmax      = (int) self::TARGET_MAX;
@@ -500,9 +710,12 @@ final class CMC_Title_Rewriter {
         // The few-shot examples teach the model the exact "simple,
         // generic, no brand, no model, no licensing" voice we want.
         // Output stays compliance-first, not catchy.
+        $max_words = (int) self::MAX_WORDS;
         $prompt = "You produce GMC-compliant e-commerce product copy. The ONLY goal is to pass Google Merchant Center review — output does NOT need to be catchy, SEO-rich, or close in meaning to the source. Plain and generic is good.\n\n"
             . "TASK\n"
-            . "Read the SOURCE only to identify what the product IS (generic product type) plus 1–3 neutral attributes (material, colour, size, set quantity, intended user). Then COMPOSE BRAND-NEW copy from scratch. Do NOT paraphrase the source — invent fresh, generic, descriptive text. Sneaky brand mentions in the source (model numbers, character names, licensing wording) MUST disappear in your output.\n\n"
+            . "Read the SOURCE only to identify what the product IS (generic product type) plus ONE primary attribute (material OR colour OR size OR intended user — pick the single most defining one, do NOT stack multiple). Then COMPOSE BRAND-NEW copy from scratch. Do NOT paraphrase the source — invent fresh, generic, descriptive text. Sneaky brand mentions in the source (model numbers, character names, licensing wording) MUST disappear in your output.\n\n"
+            . "VOICE — STORE CATALOGUE, NOT MARKETPLACE LISTING\n"
+            . "Write titles the way a real online store (Nordstrom, Allbirds, Crate & Barrel, IKEA) names a product on its own catalogue page — NOT the way Amazon / eBay / supplier portals stack keywords for SEO. A GMC reviewer who sees an attribute-stacked title flags it as \"still looks like a supplier listing\" even when no specific brand words are present. The SHAPE of the title is the giveaway. Imagine your title sitting alone on the product page of a real store — short, clean, ONE attribute.\n\n"
             . "OUTPUT FORMAT — return EXACTLY one valid JSON object with two keys, nothing else:\n"
             . "{\n"
             . "  \"title\": \"...\",\n"
@@ -510,22 +723,31 @@ final class CMC_Title_Rewriter {
             . "}\n"
             . "No markdown fences, no \"Output:\", no commentary before or after the JSON.\n\n"
             . "TITLE FIELD\n"
-            . "Format: <Generic product type> <1–3 attributes>\n"
-            . "Length: {$tmin}–{$tmax} characters. Hard max 140.\n"
-            . "Examples: \"Wall Picture Frame Wood Black 8x10\", \"Athletic Running Shoe Leather Black Men\", \"Silicone Smartphone Case Clear\".\n\n"
-            . "DESCRIPTION FIELD\n"
-            . "Length: 100–300 words (target ~150). Hard max 3000 characters of HTML.\n"
-            . "Format: simple HTML, exactly this shape:\n"
-            . "  <p>One short intro paragraph (2–3 sentences) saying what the product is and the main use case.</p>\n"
-            . "  <ul>\n"
-            . "    <li><strong>Material:</strong> ...</li>\n"
-            . "    <li><strong>Size / Dimensions:</strong> ...</li>\n"
-            . "    <li><strong>Key feature:</strong> ...</li>\n"
-            . "    <li><strong>Suitable for:</strong> ...</li>\n"
-            . "    (4–6 bullets total — drop a row if you don't have a real attribute to put there; do NOT invent attributes)\n"
-            . "  </ul>\n"
-            . "  <p>One short closing sentence about typical use, care, or who would use it.</p>\n"
-            . "Allowed HTML tags ONLY: <p>, <ul>, <li>, <strong>, <em>, <br>. Anything else (script, style, img, iframe, h1–h6, table, span, div, a, button) is FORBIDDEN and will be stripped.\n\n"
+            . "Format: <One primary attribute> <Generic product type>   — aim for 3 to {$max_words} words total, {$tmin}–{$tmax} characters. SHORTER is BETTER — a clean 3-word title (\"Plug-in Pest Repellent\", \"12-Inch Plush Toy\", \"Wool Throw Blanket\") is the ideal target. Don’t pad with extra attributes just to hit a length number. The only HARD floor is {$tmin} characters (anything below is a fragment); aim above that comfortably, but don’t exceed {$tmax}.\n"
+            . "Examples of the right shape: \"Men's Leather Running Shoe\", \"Black Plug-in Pest Repellent\", \"Round Wall Mirror\", \"12-Inch Plush Toy\", \"Ceramic Coffee Mug\", \"Wool Throw Blanket\".\n"
+            . "STRICTLY BANNED shape patterns (these are the marketplace tells GMC reviewers flag):\n"
+            . "  • Stacked attributes — \"Leather Upper Black White Men\" (4 attrs stacked). Pick ONE.\n"
+            . "  • Pack/Set count suffixes — \"1 Pack\", \"2 Pack\", \"Single Pack\", \"Set of 3\", \"Pack of 5\". Drop them entirely.\n"
+            . "  • Dash separators — \"Running Shoe - Black - Leather - Men\". Never use \" - \" in a title.\n"
+            . "  • \"for X\" attachments — \"Pest Repellent for Home Office Warehouse\". Use-cases belong in the description, not the title.\n"
+            . "  • Two colours back-to-back — \"Black White Men\", \"Red Blue Set\". Pick ONE colour.\n"
+            . "  • Parenthetical content — \"(Gift for Mom)\", \"(2024 Edition)\", \"(Set of 4)\". Strip parens entirely.\n"
+            . "  • Comma-separated attribute lists — \"Shoe, Leather, Black, Men\". Use a single phrase.\n"
+            . "Word count cap: HARD max {$max_words} words. If you draft 8+ words, drop attributes until it fits.\n\n"
+            . "DESCRIPTION FIELD — PLAIN TEXT, NO HTML.\n"
+            . "MANDATORY: this field MUST be non-empty and MUST contain real content describing the product. Returning an empty string, a placeholder, or a single short sentence is a HARD failure — the downstream pipeline will overwrite an empty description with a generic placeholder you do NOT want surfaced to GMC reviewers. Always produce the full 3-paragraph body below; if specific facts are missing, infer generic-but-plausible context from the product type and stay factual.\n"
+            . "Output exactly THREE paragraphs separated by blank lines. Target 120–200 words total (about 600–1200 characters). Hard max 2500 characters.\n"
+            . "Paragraph 1 — INTRO (2–3 sentences): what the product is, the main use case, and a brief design / quality observation. Plain prose, no labels.\n"
+            . "Paragraph 2 — DETAILS (2–3 sentences): explain key features and benefits in natural prose. Cover how the product is used, what makes it suitable for the stated purpose, any practical notes (fit, handling, performance). Stay factual — describe what's there, do not invent specs.\n"
+            . "Paragraph 3 — FEATURE LINE (single line, mandatory): inline list of 3–5 concrete attributes with labels. Each entry follows the pattern \"<Label>: <short value>.\" — use these labels in this order (drop any you don't have a real value for; do NOT invent attributes):\n"
+            . "  Material: ... Size: ... Key feature: ... Suitable for: ...\n"
+            . "ABSOLUTELY FORBIDDEN:\n"
+            . "  • Any HTML tag — no <p>, <ul>, <li>, <strong>, <em>, <br>, <div>, <span>, etc. Output pure plain text.\n"
+            . "  • Markdown — no **bold**, no *italics*, no - bullet lists, no # headings.\n"
+            . "  • A fourth paragraph, more than 3 paragraphs.\n"
+            . "  • Care / shipping / warranty claims, store policy, customer reviews, testimonials, affiliate cross-sells, external URLs, bare email addresses.\n"
+            . "  • Marketing fluff: \"premium\", \"top-quality\", \"100% guaranteed\", \"perfect for\", \"must-have\", \"world-class\".\n"
+            . "wpautop on the front-end wraps each paragraph in <p> automatically — you do NOT need to add any HTML.\n\n"
             . "HARD RULES — apply to BOTH title AND description:\n"
             . "1. Title Case for the title. Description in normal sentence case. No ALL-CAPS words longer than 4 chars (USB / LED / HDMI are fine).\n"
             . "2. NO emoji, ★, ☆, ❤, ▶, decorative symbols, repeated punctuation (!!, ??, ...), exclamation marks.\n"
@@ -541,20 +763,21 @@ final class CMC_Title_Rewriter {
             . "11. NO TECHNICAL / SCIENTIFIC / COMPOUND ADJECTIVES that read like proprietary product names — even when they're real English words. The following are FORBIDDEN as descriptors because manual reviewers misread them as brand tokens: Ultrasonic, Hypersonic, Aerosonic, Subsonic, Cryotech, Cryogenic, Bioflex, Smartpro, ProMax, UltraPro, NanoTech, MegaSeal, HyperFlex, TurboMax, MaxBoost, PowerSync, BioSync, EcoSmart, SmartShield, Aerodynamic-X, Neuro-anything. Replace with plain everyday words (Electronic, High-Frequency, Plug-in, Cooling, Flexible, Smart) — when no plain replacement fits, just DROP the adjective entirely and use the bare product type. Examples: \"Ultrasonic Pest Repellent\" → \"Electronic Pest Repellent\" or \"Plug-in Pest Repellent\" or just \"Pest Repellent\". \"NanoTech Phone Case\" → \"Slim Phone Case\". \"HyperFlex Yoga Mat\" → \"Flexible Yoga Mat\". Rule of thumb: if a word LOOKS branded but isn't in any English dictionary you'd use in everyday conversation, drop it.\n"
             . "12. Description must NOT include affiliate cross-sells (\"pairs perfectly with our other products...\"), customer reviews, testimonials, store policy text, shipping promises, or warranty claims.\n"
             . "13. Description must NOT include external URLs or bare email addresses.\n\n"
-            . "EXAMPLES — study these. Your JSON output must match this voice:\n\n"
+            . "EXAMPLES — study these carefully. Notice the SHAPE: 3–5 words, ONE primary attribute, no pack count, no dash, no parens, no \"for X\" tail. Your JSON output must match this voice:\n\n"
             . "INPUT TITLE: Nike Air Max 90 Men's Athletic Running Shoe (Black/White) - Genuine Leather Upper - Sport & Casual Wear\n"
             . "INPUT DESCRIPTION (excerpt): Nike's iconic Air Max 90 silhouette returns with premium genuine leather upper... Officially licensed. Pairs with Nike Air Force 1.\n"
             . "OUTPUT:\n"
-            . "{\"title\":\"Athletic Running Shoe Leather Upper Black White Men\",\"description\":\"<p>This men's athletic running shoe combines a leather upper with a cushioned midsole for daily training and casual wear.</p><ul><li><strong>Material:</strong> genuine leather upper, foam midsole</li><li><strong>Colour:</strong> black with white accents</li><li><strong>Closure:</strong> standard lace-up</li><li><strong>Suitable for:</strong> light running, gym workouts, everyday wear</li></ul><p>Comfortable for long-wear sessions and easy to clean with a soft cloth.</p>\"}\n\n"
+            . "{\"title\":\"Men's Leather Running Shoe\",\"description\":\"This men's running shoe pairs a leather upper with a cushioned foam midsole, designed for daily training and casual everyday wear. The construction balances support and flexibility, making it suited to both light running sessions and longer hours on the feet.\\n\\nA standard lace-up closure ensures a secure fit across different foot shapes, while the foam midsole absorbs impact during walking and running. The leather upper resists scuffs and wears in over time, settling into a natural look that works for both gym sessions and weekend outings. Easy to clean with a soft cloth — no special care required for daily use.\\n\\nMaterial: genuine leather upper, foam midsole. Colour: black with white accents. Closure: standard lace-up. Suitable for: light running, gym workouts, and everyday wear.\"}\n\n"
             . "INPUT TITLE: Disney Officially Licensed Mickey Mouse Plush Toy 12 inch (Perfect Gift for Kids)\n"
             . "INPUT DESCRIPTION (excerpt): This officially licensed Disney Mickey Mouse plush is the perfect gift! Bestseller 2024. ★★★★★\n"
             . "OUTPUT:\n"
-            . "{\"title\":\"Cartoon Character Plush Toy 12 Inch\",\"description\":\"<p>A 12-inch soft plush toy designed in a friendly cartoon-character style, suitable for nursery decor and play.</p><ul><li><strong>Material:</strong> short-pile plush exterior with polyester fibre filling</li><li><strong>Size:</strong> approximately 12 inches tall</li><li><strong>Care:</strong> spot clean only, do not machine wash</li><li><strong>Suitable for:</strong> children aged 3 and up</li></ul><p>Lightweight and easy to carry, with a soft texture suitable for cuddling and display.</p>\"}\n\n"
+            . "{\"title\":\"12-Inch Plush Toy\",\"description\":\"A 12-inch soft plush toy designed in a friendly cartoon-character style, suited to nursery decor and everyday play. The plush is hand-sized for younger children, making it easy to carry, cuddle, and display on shelves or beds.\\n\\nThe exterior uses a short-pile plush fabric with a soft texture, while the interior is filled with polyester fibre for a gentle, even feel when squeezed. Care is straightforward: spot clean only — avoid machine washing to preserve shape and surface finish. Stitched with attention to seams and finished with non-toxic materials suitable for children's play.\\n\\nMaterial: short-pile plush exterior with polyester fibre filling. Size: approximately 12 inches tall. Care: spot clean only. Suitable for: children aged 3 and up, nursery decor, and play.\"}\n\n"
             . "INPUT TITLE: Ultrasonic Pest Repellent Plug-in, Electronic Mouse Traps & Insect Repellent, Pest Control for Rodent, Roach, Ant, Squirrel, Spider, Bugs, Mouse, Rat, Bat for Home, Office, Warehouse Black 1 Pack\n"
             . "INPUT DESCRIPTION (excerpt): Premium ultrasonic technology drives away rodents and insects safely without chemicals.\n"
             . "OUTPUT:\n"
-            . "{\"title\":\"Electronic Pest Repellent Plug-in Black Single Pack\",\"description\":\"<p>This plug-in pest repellent is designed for indoor use in homes, offices, and warehouse spaces, providing a chemical-free way to discourage common pests.</p><ul><li><strong>Type:</strong> electronic plug-in unit</li><li><strong>Coverage:</strong> single-room indoor area</li><li><strong>Target pests:</strong> rodents and common insects</li><li><strong>Colour:</strong> black</li></ul><p>Simple to install in any standard wall outlet and operates quietly during normal use.</p>\"}\n\n"
-            . "Notice how \"Ultrasonic\" was dropped from the title — it READS like a brand even though it's an English word. \"Electronic\" is the safe everyday replacement.\n\n"
+            . "{\"title\":\"Plug-in Pest Repellent\",\"description\":\"This plug-in pest repellent is designed for indoor use in homes, offices, and warehouse spaces, providing a chemical-free way to discourage common indoor pests. The unit runs quietly during normal use, making it suitable for areas where a louder pest-control method would be disruptive.\\n\\nInstallation is straightforward: plug into any standard wall outlet — no setup, wiring, or additional accessories required. The repellent targets rodents and common insects and operates continuously while plugged in. Coverage is a single-room indoor area; larger spaces benefit from adding more units across rooms. Easy to relocate when needed.\\n\\nType: electronic plug-in unit. Coverage: single-room indoor area. Target pests: rodents and common insects. Colour: black. Suitable for: home, office, and warehouse interiors.\"}\n\n"
+            . "Notice in example 1 how 8 source attributes (model name, men, athletic, running, black, white, leather, sport) collapsed to JUST 3 words: \"Men's Leather Running Shoe\". The model number disappeared (Air Max 90 → just \"Running Shoe\"). \"Ultrasonic\" dropped too — it READS like a brand even though it's an English word. Attribute stacks like \"Black White Men\" / \"Black Single Pack\" are FORBIDDEN — pick ONE attribute and drop the rest.\n\n"
+            . $retry_feedback
             . "Now produce a single compliant JSON object for the SOURCE below. Output ONLY the JSON.\n\n"
             . "SOURCE TITLE: " . $original_title . "\n"
             . "SOURCE DESCRIPTION: " . $desc_source;
@@ -627,60 +850,160 @@ final class CMC_Title_Rewriter {
         if ( $end < 0 ) { return null; }
 
         $json = substr( $stripped, $first, $end - $first + 1 );
+        // Repair raw control chars inside string values — common when the
+        // model emits a literal newline in the description value instead
+        // of the JSON escape "\n". PHP json_decode rejects raw newlines
+        // / tabs / carriage returns inside string values per RFC 8259;
+        // pre-escaping them lets the otherwise-well-formed payload
+        // round-trip cleanly.
+        $json = self::repair_json_control_chars( $json );
         $data = json_decode( $json, true );
         return is_array( $data ) ? $data : null;
     }
 
     /**
-     * Sanitise an AI-generated description: strip every HTML tag
-     * outside the 6-tag allowlist (script, style, img, iframe, h1-h6,
-     * span, div, a, button, etc. all dropped); flatten weird whitespace;
-     * decode any over-escaped entities; trim leading/trailing junk
-     * markers ("Description:", code fences) the model occasionally
-     * emits inside the JSON value.
+     * Walk a JSON payload and escape raw control characters that occur
+     * INSIDE quoted string values. Outside strings the chars pass
+     * through unchanged (so newlines between key/value pairs stay
+     * valid JSON whitespace).
+     */
+    private static function repair_json_control_chars( string $json ): string {
+        $out       = '';
+        $in_string = false;
+        $escape    = false;
+        $len       = strlen( $json );
+        for ( $i = 0; $i < $len; $i++ ) {
+            $ch = $json[ $i ];
+            if ( $escape ) {
+                $out   .= $ch;
+                $escape = false;
+                continue;
+            }
+            if ( $in_string && $ch === '\\' ) {
+                $out   .= $ch;
+                $escape = true;
+                continue;
+            }
+            if ( $ch === '"' ) {
+                $in_string = ! $in_string;
+                $out      .= $ch;
+                continue;
+            }
+            if ( $in_string ) {
+                if ( $ch === "\n" ) { $out .= '\\n'; continue; }
+                if ( $ch === "\r" ) { $out .= '\\r'; continue; }
+                if ( $ch === "\t" ) { $out .= '\\t'; continue; }
+            }
+            $out .= $ch;
+        }
+        return $out;
+    }
+
+    /**
+     * Sanitise an AI-generated description into PLAIN TEXT.
+     *
+     * The model is now instructed to output plain text with two
+     * paragraphs separated by a blank line. This method:
+     *   - strips any HTML the model emits anyway (it occasionally
+     *     wraps in <p>...</p> out of habit) via wp_strip_all_tags();
+     *   - decodes over-escaped slashes / entities;
+     *   - removes "Description:" labels and ``` fences emitted
+     *     inside the JSON value;
+     *   - collapses spaces / tabs to single spaces but preserves
+     *     paragraph breaks (double newline) so wpautop() can wrap
+     *     each paragraph in <p> on the front-end.
      */
     private static function sanitise_description( string $raw ): string {
         if ( $raw === '' ) { return ''; }
         $s = trim( $raw );
-        // Some models double-escape the slash in </p>. Decode once.
+
+        // Decode double-escaped slashes / entities the model occasionally
+        // emits inside JSON string values.
         $s = str_replace( [ '<\\/', '\\/' ], [ '</', '/' ], $s );
-        // Strip wrapping label / fence the model sneaks INSIDE the
-        // JSON value.
+
+        // Strip wrapping label / code fence that some models sneak in.
         $s = preg_replace( '/^(description)\s*:\s*/i', '', $s );
-        $s = preg_replace( '/```(?:html)?\s*(.*?)```/s', '$1', $s );
-        // Whitelist HTML — drops script/style/img/h1-h6/etc.
-        $s = wp_kses( $s, self::description_allowed_html() );
-        // Collapse runs of whitespace inside text but keep tag structure.
-        $s = preg_replace( '/[ \t]+/', ' ', $s );
-        $s = preg_replace( '/\s*\n\s*/', "\n", $s );
+        $s = preg_replace( '/```(?:html|text)?\s*(.*?)```/s', '$1', $s );
+
+        // Strip ALL HTML tags. Any <p>, <ul>, <li>, <strong> etc. the
+        // model emits despite the prompt is dropped — wpautop() on the
+        // front-end re-adds paragraph wrapping cleanly.
+        $s = (string) wp_strip_all_tags( $s, false );
+
+        // Decode HTML entities so &amp; doesn't show literally.
+        $s = html_entity_decode( $s, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+        // Normalise newlines: collapse Windows / Mac line-endings to \n.
+        $s = str_replace( [ "\r\n", "\r" ], "\n", $s );
+
+        // Collapse runs of spaces / tabs (but NOT newlines — paragraph
+        // breaks must survive).
+        $s = preg_replace( '/[ \t]+/u', ' ', $s );
+
+        // Collapse 3+ consecutive newlines down to exactly 2 (one
+        // paragraph break). 1 newline stays as a soft line break.
+        $s = preg_replace( "/\n{3,}/", "\n\n", $s );
+
+        // Trim each line + global trim.
+        $s = preg_replace( '/[ \t]*\n[ \t]*/', "\n", $s );
+
         return trim( $s );
     }
 
     /**
-     * Description-side validator. The plain-text length (after stripping
-     * HTML) must fall within [DESC_MIN_TEXT_LEN, …]; the HTML wrapper
-     * itself is capped at DESC_MAX_HTML_LEN. Then the same brand-leak
-     * gates we apply to titles run on the plain text.
+     * Soft quality scan over a saved AI description. Returns a list
+     * of human-readable warning strings — empty list = clean. This
+     * is informational only: the description is saved regardless of
+     * what this function returns. The output is persisted in
+     * `META_DESC_QUALITY_WARNING` so admin scans can surface rows
+     * that may want manual review.
+     *
+     * @return list<string>
      */
-    private static function passes_description_validation( string $html ): bool {
-        if ( $html === '' ) { return false; }
+    private static function description_quality_warnings( string $text ): array {
+        $warnings = [];
+        if ( $text === '' ) {
+            return $warnings;
+        }
+        $len = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
+        if ( $len < self::DESC_MIN_TEXT_LEN ) {
+            $warnings[] = sprintf( 'unusually short (len=%d, target ≥%d)', $len, self::DESC_MIN_TEXT_LEN );
+        }
+        if ( $len > self::DESC_MAX_TEXT_LEN ) {
+            $warnings[] = sprintf( 'unusually long (len=%d, target ≤%d)', $len, self::DESC_MAX_TEXT_LEN );
+        }
+        if ( self::contains_protected_brand( $text ) ) {
+            $warnings[] = 'contains protected brand — review for GMC compliance';
+        }
+        if ( self::contains_sneaky_brand_signal( $text ) ) {
+            $warnings[] = 'contains sneaky brand signal — review for GMC compliance';
+        }
+        return $warnings;
+    }
 
-        $html_len = function_exists( 'mb_strlen' ) ? mb_strlen( $html ) : strlen( $html );
-        if ( $html_len > self::DESC_MAX_HTML_LEN ) { return false; }
+    /**
+     * Description validator — plain-text only.
+     *
+     * Soft-fail policy mirrors the title pipeline:
+     *   - empty / below DESC_MIN_TEXT_LEN          → reject (fragment)
+     *   - above DESC_MAX_TEXT_LEN                  → reject (out of band)
+     *   - brand leak / sneaky brand signal         → reject (GMC risk)
+     *   - else                                     → accept (in target or close)
+     *
+     * Anything inside [DESC_TARGET_MIN, DESC_TARGET_MAX] is the ideal
+     * band but we don't reject titles outside that range as long as the
+     * hard bounds and brand checks pass — losing a slightly long-or-short
+     * description is worse than keeping the supplier original.
+     */
+    private static function passes_description_validation( string $text ): bool {
+        if ( $text === '' ) { return false; }
 
-        $text     = wp_strip_all_tags( $html );
-        $text_len = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
-        if ( $text_len < self::DESC_MIN_TEXT_LEN ) { return false; }
+        $len = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
+        if ( $len < self::DESC_MIN_TEXT_LEN ) { return false; }
+        if ( $len > self::DESC_MAX_TEXT_LEN ) { return false; }
 
         if ( self::contains_protected_brand( $text ) )      { return false; }
         if ( self::contains_sneaky_brand_signal( $text ) )  { return false; }
-
-        // Reject if anything got through the HTML allowlist that
-        // shouldn't have — defensive belt-and-suspenders against a
-        // wp_kses bypass we missed.
-        if ( preg_match( '/<\s*(script|style|iframe|img|h[1-6]|table|a\s|button|form)/i', $html ) ) {
-            return false;
-        }
 
         return true;
     }
@@ -721,30 +1044,130 @@ final class CMC_Title_Rewriter {
      * @return list<string>
      */
     private static function validation_reasons( string $title ): array {
-        $reasons = [];
+        $tiered = self::validation_reasons_tiered( $title );
+        return array_merge( $tiered['hard'], $tiered['soft'] );
+    }
+
+    /**
+     * Two-tier validation. HARD reasons are non-negotiable (protected
+     * brand leakage, ALL-CAPS bursts, hard length / word ceilings) and
+     * mean the AI output cannot be saved as-is. SOFT reasons are minor
+     * Amazon-shape patterns (slightly long, "for X" tail, two colours
+     * stacked, parenthetical content) — caller may save the title with
+     * a warning flag rather than retrying forever.
+     *
+     * Returns `[ 'hard' => list<string>, 'soft' => list<string> ]`.
+     */
+    private static function validation_reasons_tiered( string $title ): array {
+        $hard = [];
+        $soft = [];
+
         if ( $title === '' ) {
-            return [ 'empty output' ];
+            return [ 'hard' => [ 'empty output' ], 'soft' => [] ];
         }
+
         $len = function_exists( 'mb_strlen' ) ? mb_strlen( $title ) : strlen( $title );
+
+        // Hard length / word ceilings — output unsavable beyond these.
+        if ( $len > self::HARD_MAX_LEN ) {
+            $hard[] = sprintf( 'far too long (len=%d, hard-max=%d) — drop most attributes', $len, self::HARD_MAX_LEN );
+        } elseif ( $len > self::MAX_LEN ) {
+            $soft[] = sprintf( 'slightly long (len=%d, soft-max=%d) — Amazon-shaped, prefer to drop 1–2 words', $len, self::MAX_LEN );
+        }
         if ( $len < self::MIN_LEN ) {
-            $reasons[] = sprintf( 'too short (len=%d, min=%d)', $len, self::MIN_LEN );
+            // Title-too-short is a hard issue — likely the model
+            // returned a fragment or just a colour. Keep retrying.
+            $hard[] = sprintf( 'too short (len=%d, min=%d)', $len, self::MIN_LEN );
         }
-        if ( $len > self::MAX_LEN ) {
-            $reasons[] = sprintf( 'too long (len=%d, max=%d)', $len, self::MAX_LEN );
+
+        $word_count = count( preg_split( '/\s+/u', trim( $title ) ) ?: [] );
+        if ( $word_count > self::HARD_MAX_WORDS ) {
+            $hard[] = sprintf(
+                'far too many words (got=%d, hard-max=%d) — output is essentially a marketplace listing',
+                $word_count,
+                self::HARD_MAX_WORDS
+            );
+        } elseif ( $word_count > self::MAX_WORDS ) {
+            $soft[] = sprintf(
+                'slightly too many words (got=%d, soft-max=%d) — try to drop 1–2 stacked attributes',
+                $word_count,
+                self::MAX_WORDS
+            );
         }
+
+        // Brand leakage is ALWAYS hard — these patterns put the page
+        // at GMC Misrepresentation risk and must not be saved.
         if ( self::contains_protected_brand( $title ) ) {
-            $reasons[] = 'contains protected brand';
+            $hard[] = 'contains protected brand';
         }
-        // All-caps word ≥5 chars (allow USB / LED / HDMI / RGB).
         if ( preg_match_all( '/\b[A-Z]{5,}\b/', $title, $m ) ) {
-            $reasons[] = 'ALL-CAPS word found: ' . implode( ', ', array_unique( $m[0] ) );
+            $hard[] = 'ALL-CAPS word found: ' . implode( ', ', array_unique( $m[0] ) );
         }
-        // Sneaky brand signals — promo, marketplaces, franchises, licensing.
         $sneaky = self::sneaky_brand_signal_reason( $title );
         if ( $sneaky !== '' ) {
-            $reasons[] = $sneaky;
+            $hard[] = $sneaky;
         }
-        return $reasons;
+
+        // Amazon-shape patterns are SOFT — annoying but the title is
+        // still better than the original supplier copy. Worth saving
+        // with a warning flag rather than failing a product entirely.
+        $amazon_shape = self::amazon_shape_reason( $title );
+        if ( $amazon_shape !== '' ) {
+            $soft[] = $amazon_shape;
+        }
+
+        return [ 'hard' => $hard, 'soft' => $soft ];
+    }
+
+    /**
+     * Detect "Amazon listing shape" patterns in a title — composition
+     * tells the model copies from marketplace listings even when no
+     * specific brand word is present. Returns a human-readable reason
+     * string when a pattern matches, or '' when the title is shape-clean.
+     */
+    private static function amazon_shape_reason( string $title ): string {
+        $t = ' ' . strtolower( $title ) . ' ';
+
+        // Numeric pack/set suffixes — classic marketplace SEO tail.
+        // Matches: " 1 Pack", " 2 Pack", " 12 Pack ", " 3-Pack",
+        //          " Single Pack", " Set of 3", " Pack of 5".
+        if ( preg_match( '/\b(?:\d+\s*[-]?\s*pack|single\s+pack|set\s+of\s+\d+|pack\s+of\s+\d+)\b/u', $t ) ) {
+            return 'Amazon-shape: pack/set suffix detected (e.g. "1 Pack", "Set of 3") — drop the count suffix; a store title doesn\'t advertise quantity in the name';
+        }
+
+        // Dash-separated attribute chains — "X - Y - Z" or "X - Y" are
+        // marketplace tells. A clean store title doesn\'t use " - " as a
+        // separator between attributes.
+        if ( substr_count( $t, ' - ' ) >= 1 ) {
+            return 'Amazon-shape: contains " - " separator — replace with a single compact phrase, no dash chains';
+        }
+
+        // "for X" attachments — Amazon stuffs use-cases via " for Home",
+        // " for Office", " for Kids". A store title doesn\'t enumerate
+        // use-cases inline.
+        if ( preg_match( '/\bfor\s+(home|office|kitchen|bedroom|bathroom|kids|adults|men|women|gift|gifts|christmas|birthday|wedding|party|outdoor|indoor|car)\b/u', $t ) ) {
+            return 'Amazon-shape: "for <use-case>" attachment detected — store titles don\'t inline use-cases; drop it or move to description';
+        }
+
+        // Two or more colour words back-to-back ("Black White Men",
+        // "Red Blue Green"). A store picks ONE colour.
+        $colour_pat = '/\b(black|white|brown|grey|gray|silver|gold|red|blue|green|yellow|pink|purple|orange|navy|beige|cream|tan|ivory|charcoal|burgundy)\s+(black|white|brown|grey|gray|silver|gold|red|blue|green|yellow|pink|purple|orange|navy|beige|cream|tan|ivory|charcoal|burgundy)\b/u';
+        if ( preg_match( $colour_pat, $t ) ) {
+            return 'Amazon-shape: two colour words stacked — pick ONE colour, drop the rest';
+        }
+
+        // Comma-separated attribute lists ("Shoe, Leather, Black, Men").
+        if ( substr_count( $title, ',' ) >= 2 ) {
+            return 'Amazon-shape: 2+ commas — attribute list shape; rewrite as a single short phrase';
+        }
+
+        // Parenthetical SEO bursts — "(2024)", "(New Edition)",
+        // "(Gift)", "(Set of 4)".
+        if ( preg_match( '/\(([^)]{2,40})\)/u', $title ) ) {
+            return 'Amazon-shape: parenthetical content in title — strip the parentheses and their content';
+        }
+
+        return '';
     }
 
     /**

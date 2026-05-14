@@ -36,6 +36,8 @@ final class CMC_Ajax {
     public const ACTION_RUN_ALL_PICK_CAT       = 'cmc_cloner_run_all_pick_cat';
     public const ACTION_RUN_ALL_POD_MARK_DONE  = 'cmc_cloner_run_all_pod_mark_done';
     public const ACTION_RUN_ALL_HEAL_GUIDS     = 'cmc_cloner_run_all_heal_guids';
+    public const ACTION_RUN_ALL_SIZE_GUIDE     = 'cmc_cloner_run_all_size_guide';
+    public const ACTION_VARIATION_NORMALIZE_BATCH = 'cmc_cloner_variation_normalize_batch';
     public const ACTION_REVIEW_SCAN          = 'cmc_cloner_review_scan';
     public const ACTION_REVIEW_SEED          = 'cmc_cloner_review_seed';
     public const ACTION_REVIEW_AI_POLISH_ONE = 'cmc_cloner_review_ai_polish_one';
@@ -68,6 +70,8 @@ final class CMC_Ajax {
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_PICK_CAT,      [ self::class, 'handle_run_all_pick_cat' ] );
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_POD_MARK_DONE, [ self::class, 'handle_run_all_pod_mark_done' ] );
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_HEAL_GUIDS,    [ self::class, 'handle_run_all_heal_guids' ] );
+        add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_SIZE_GUIDE,    [ self::class, 'handle_run_all_size_guide' ] );
+        add_action( 'wp_ajax_' . self::ACTION_VARIATION_NORMALIZE_BATCH, [ self::class, 'handle_variation_normalize_batch' ] );
         add_action( 'wp_ajax_' . self::ACTION_REVIEW_SCAN,          [ self::class, 'handle_review_scan' ] );
         add_action( 'wp_ajax_' . self::ACTION_REVIEW_SEED,          [ self::class, 'handle_review_seed' ] );
         add_action( 'wp_ajax_' . self::ACTION_REVIEW_AI_POLISH_ONE, [ self::class, 'handle_review_ai_polish_one' ] );
@@ -201,18 +205,62 @@ final class CMC_Ajax {
             'temperature' => (float) $settings['temperature'],
         ];
 
-        try {
-            $output = CMC_AI_Client::generate( $built['prompt'], $params );
-        } catch ( Throwable $e ) {
-            wp_send_json_error( [ 'message' => 'AI generation failed: ' . $e->getMessage() ], 500 );
+        // Validator runs only on templates whose copy is most prone to
+        // industry-leak. Contact Us deliberately omitted — that page is
+        // mostly contact details and forcing industry words there reads
+        // as keyword-stuffing. Adding more templates here later is a
+        // one-line change. Homepage doesn't validate server-side because
+        // the plugin only emits a prompt, not HTML.
+        $validate_template = in_array( $template_slug, [ 'about-us' ], true );
+        $industry          = (string) ( CMC_Settings::get()['company_info']['nganh_hang'] ?? '' );
+        // Resolve the niche slug to its human label so the validator's
+        // mention count matches what the prompt actually instructs the
+        // AI to write ("Fashion & Apparel", not "fashion-apparel").
+        if ( $industry !== '' ) {
+            $nganh_options = CMC_Shortcodes::nganh_hang_options();
+            $industry      = (string) ( $nganh_options[ $industry ] ?? $industry );
         }
 
-        $content = CMC_Content_Sanitizer::sanitize(
-            self::strip_code_fences( (string) $output )
-        );
+        $max_attempts = $validate_template ? 3 : 1; // 1 initial + 2 retries
+        $prompt       = $built['prompt'];
+        $output       = '';
+        $content      = '';
+        $last_reasons = [];
+        $attempts     = 0;
 
-        if ( trim( $content ) === '' ) {
-            wp_send_json_error( [ 'message' => 'AI returned empty content.' ], 500 );
+        for ( $i = 0; $i < $max_attempts; $i++ ) {
+            $attempts++;
+            try {
+                $output = CMC_AI_Client::generate( $prompt, $params );
+            } catch ( Throwable $e ) {
+                wp_send_json_error( [ 'message' => 'AI generation failed: ' . $e->getMessage() ], 500 );
+            }
+            $content = CMC_Content_Sanitizer::sanitize(
+                self::strip_code_fences( (string) $output )
+            );
+            if ( trim( $content ) === '' ) {
+                wp_send_json_error( [ 'message' => 'AI returned empty content.' ], 500 );
+            }
+
+            if ( ! $validate_template ) {
+                break;
+            }
+
+            $verdict = CMC_Content_Validator::validate( $content, $template_slug, $industry );
+            if ( $verdict['pass'] ) {
+                $last_reasons = [];
+                break;
+            }
+            $last_reasons = $verdict['reasons'];
+
+            // Out of retry budget — keep the last attempt and flag it.
+            if ( $i === $max_attempts - 1 ) {
+                break;
+            }
+
+            // Re-prompt with the failure reasons appended as a footer so
+            // the next attempt has explicit corrective guidance.
+            $prompt = $built['prompt'] . CMC_Content_Validator::format_retry_footer( $verdict['reasons'] );
         }
 
         $result = CMC_Page_Writer::update(
@@ -226,14 +274,32 @@ final class CMC_Ajax {
             wp_send_json_error( [ 'message' => 'Save failed: ' . $result->get_error_message() ], 500 );
         }
 
+        // Stamp / clear a postmeta warning marker so the admin UI can
+        // surface "this page failed validation N times — review it"
+        // on the Pages screen.
+        if ( $validate_template ) {
+            if ( ! empty( $last_reasons ) ) {
+                update_post_meta( $page_id, '_cmc_validation_warning', [
+                    'reasons'  => array_slice( $last_reasons, 0, 5 ),
+                    'attempts' => $attempts,
+                    'at'       => time(),
+                ] );
+            } else {
+                delete_post_meta( $page_id, '_cmc_validation_warning' );
+            }
+        }
+
         $duration_ms = (int) round( ( microtime( true ) - $start ) * 1000 );
         $page        = CMC_Page_Reader::get_page( $page_id );
 
         wp_send_json_success( [
-            'page'          => $page,
-            'template_slug' => $built['template_slug'],
-            'skeleton_slug' => $built['skeleton_slug'],
-            'duration_ms'   => $duration_ms,
+            'page'              => $page,
+            'template_slug'     => $built['template_slug'],
+            'skeleton_slug'     => $built['skeleton_slug'],
+            'duration_ms'       => $duration_ms,
+            'validation_attempts' => $attempts,
+            'validation_passed'   => empty( $last_reasons ),
+            'validation_reasons'  => $last_reasons,
         ] );
     }
 
@@ -534,6 +600,180 @@ final class CMC_Ajax {
         $offset = max( 0, (int) ( $_POST['offset'] ?? 0 ) );
         $limit  = max( 1, min( 500, (int) ( $_POST['limit'] ?? 100 ) ) );
         wp_send_json_success( CMC_Image_Renamer::heal_stale_guids_batch( $offset, $limit ) );
+    }
+
+    /**
+     * Run-All step: keep the niche-specific Size Guide page in sync with
+     * the configured industry. Bidirectional — covers the "cloned to a
+     * non-fashion site" case so the user never has to clean up manually.
+     *
+     * Behaviour matrix (industry-match × page-exists):
+     *   match + no page    → create empty `size-guide` page, AI fill,
+     *                        attach link to footer block. Toggle-back
+     *                        case: any previously-demoted draft with the
+     *                        same slug is reused + re-published, not
+     *                        duplicated.
+     *   match + page exists → re-publish if needed, AI regenerate,
+     *                         ensure footer link present.
+     *   no match + page    → demote to draft, strip the footer link
+     *                        (keeps slug stable + backup intact).
+     *   no match + no page → no-op (skipped:true).
+     *
+     * Not idempotent in the matching branch: re-running Run All always
+     * regenerates content. The very first pre-plugin `post_content`
+     * stays preserved in `_cmc_original_content`, so subsequent regens
+     * only clobber the previous AI output, never the user's original.
+     */
+    public static function handle_run_all_size_guide(): void {
+        self::guard();
+
+        // 1. Industry gate (computed exactly like CMC_Pages_Controller so
+        //    the same haystack drives both UI filter and Run-All gating).
+        $settings = CMC_Settings::get();
+        $slug     = (string) ( $settings['company_info']['nganh_hang'] ?? '' );
+        $opts     = CMC_Shortcodes::nganh_hang_options();
+        $label    = (string) ( $opts[ $slug ] ?? '' );
+        $haystack = trim( $slug . ' ' . $label );
+        $applies  = CMC_Template_Registry::applies_to_industry( 'size-guide', $haystack );
+
+        // 2. Locate the page (may not exist yet).
+        $existing = get_page_by_path( 'size-guide', OBJECT, 'page' );
+        $page_id  = $existing ? (int) $existing->ID : 0;
+        $created  = false;
+
+        // Also look up any draft we previously demoted on a prior pass,
+        // so toggling industry back to fashion re-publishes the same
+        // page instead of creating a sibling. `get_page_by_path` only
+        // returns published posts; a direct query covers the draft case.
+        if ( $page_id <= 0 ) {
+            global $wpdb;
+            $draft_id = (int) $wpdb->get_var( $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type=%s AND post_status IN ('draft','pending','private') AND post_name=%s LIMIT 1",
+                'page',
+                'size-guide'
+            ) );
+            if ( $draft_id > 0 ) {
+                $page_id = $draft_id;
+            }
+        }
+
+        // 3. Cleanup branch — industry no longer needs a Size Guide.
+        if ( ! $applies ) {
+            if ( $page_id <= 0 ) {
+                wp_send_json_success( [
+                    'skipped' => true,
+                    'reason'  => 'industry-not-applicable',
+                    'message' => 'Industry "' . $label . '" does not need a Size Guide — nothing to do.',
+                ] );
+            }
+            // Strip the footer link first so the URL stops 404-ing on
+            // sites still hitting it before the page goes private.
+            CMC_Size_Guide::detach_slug( 'size-guide' );
+
+            // Demote to draft rather than trash: keeps the slug stable
+            // (trash appends `__trashed`), keeps `_cmc_original_content`
+            // backup intact, and makes the re-publish path on toggle-back
+            // a single status flip with no slug-collision worry.
+            $demoted = wp_update_post( [
+                'ID'          => $page_id,
+                'post_status' => 'draft',
+            ], true );
+            if ( is_wp_error( $demoted ) ) {
+                wp_send_json_error( [ 'message' => 'Could not draft Size Guide page: ' . $demoted->get_error_message() ], 500 );
+            }
+            wp_send_json_success( [
+                'page_id' => $page_id,
+                'created' => false,
+                'skipped' => false,
+                'cleaned' => true,
+                'message' => 'Industry "' . $label . '" no longer needs Size Guide — page set to draft + footer link removed.',
+            ] );
+        }
+
+        // 4. Matching branch — make sure the page exists AND is published.
+        if ( $page_id <= 0 ) {
+            $inserted = wp_insert_post( [
+                'post_type'    => 'page',
+                'post_status'  => 'publish',
+                'post_title'   => 'Size Guide',
+                'post_name'    => 'size-guide',
+                'post_content' => '',
+                'comment_status' => 'closed',
+                'ping_status'    => 'closed',
+            ], true );
+            if ( is_wp_error( $inserted ) ) {
+                wp_send_json_error( [ 'message' => 'Could not create Size Guide page: ' . $inserted->get_error_message() ], 500 );
+            }
+            $page_id = (int) $inserted;
+            $created = true;
+        } else {
+            // Existing page might be a previously-drafted one — re-publish.
+            $current_status = (string) get_post_status( $page_id );
+            if ( $current_status !== 'publish' ) {
+                wp_update_post( [
+                    'ID'          => $page_id,
+                    'post_status' => 'publish',
+                ] );
+            }
+        }
+
+        // 5. Build prompt + call AI + save. Same pattern as handle_bulk_one
+        //    but inlined here so a Run-All retry doesn't depend on the
+        //    Pages bulk UI being open.
+        try {
+            $built = CMC_Prompt_Builder::build( 'size-guide', $page_id, null );
+        } catch ( Throwable $e ) {
+            wp_send_json_error( [ 'message' => 'Prompt build failed: ' . $e->getMessage() ], 500 );
+        }
+
+        $params = [
+            'max_tokens'  => (int)   $settings['max_tokens'],
+            'temperature' => (float) $settings['temperature'],
+        ];
+
+        try {
+            $output = CMC_AI_Client::generate( $built['prompt'], $params );
+        } catch ( Throwable $e ) {
+            wp_send_json_error( [ 'message' => 'AI generation failed: ' . $e->getMessage() ], 500 );
+        }
+
+        $content = CMC_Content_Sanitizer::sanitize(
+            self::strip_code_fences( (string) $output )
+        );
+        if ( trim( $content ) === '' ) {
+            wp_send_json_error( [ 'message' => 'AI returned empty content.' ], 500 );
+        }
+
+        $result = CMC_Page_Writer::update(
+            $page_id,
+            $content,
+            $built['template_slug'],
+            $built['skeleton_slug'],
+            (int) $built['style_seed']
+        );
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => 'Save failed: ' . $result->get_error_message() ], 500 );
+        }
+
+        wp_send_json_success( [
+            'page_id' => $page_id,
+            'created' => $created,
+            'skipped' => false,
+            'message' => $created ? 'Page created + content generated + added to footer.' : 'Content regenerated (overwrote previous version) + footer ensured.',
+        ] );
+    }
+
+    /**
+     * Paginated variation-attribute-term cleanup. Each call walks
+     * `$batch` terms starting at `$offset`, applies Layer 1+2
+     * normalization, dedupes, and returns counters + a few samples.
+     * Client paginates until `done = true`.
+     */
+    public static function handle_variation_normalize_batch(): void {
+        self::guard();
+        $offset = max( 0, (int) ( $_POST['offset'] ?? 0 ) );
+        $batch  = max( 1, min( 200, (int) ( $_POST['batch_size'] ?? 50 ) ) );
+        wp_send_json_success( CMC_Variation_Normalizer::apply( $offset, $batch ) );
     }
 
     // ---------- Review Seeder ----------

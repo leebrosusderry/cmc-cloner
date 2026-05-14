@@ -48,6 +48,17 @@ final class CMC_Page_Writer {
         update_post_meta( $page_id, '_cmc_style_seed',    $style_seed );
         update_post_meta( $page_id, '_cmc_generated_at',  time() );
 
+        /**
+         * Fires after a CMC page has been successfully cloned/updated.
+         * Listeners (e.g. CMC_Size_Guide) can perform side-effects such
+         * as attaching niche-specific pages to the footer menu.
+         *
+         * @param int    $page_id        WP page ID just updated.
+         * @param string $template_slug  Template that was applied.
+         * @param string $skeleton_slug  Skeleton that was used.
+         */
+        do_action( 'cmc_cloner_page_updated', $page_id, $template_slug, $skeleton_slug );
+
         return true;
     }
 

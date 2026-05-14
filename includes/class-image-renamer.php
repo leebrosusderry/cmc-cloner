@@ -42,6 +42,22 @@ final class CMC_Image_Renamer {
     public const CLASS_VERSION    = '0.9.10-disk-check-precedes-renamed-flag';
 
     /**
+     * When true, per-attachment calls to update_post_content_urls() inside
+     * rename_attachment() defer to the product-level master sweep
+     * (see rename_product()). Cuts N×(LIKE-scan-per-attachment) down to a
+     * single merged sweep at end-of-product — typically 5-10× faster on
+     * sites with thousands of postmeta rows.
+     */
+    private static bool $defer_attachment_sweeps = false;
+
+    /**
+     * Accumulator for url-pair maps collected while $defer_attachment_sweeps
+     * is true. rename_product() drains and clears it after running the
+     * one merged sweep at end-of-product.
+     */
+    private static array $deferred_url_buffer = [];
+
+    /**
      * Wire runtime self-healing filters. Called once from CMC_Plugin::register_hooks.
      */
     public static function init(): void {
@@ -523,6 +539,16 @@ final class CMC_Image_Renamer {
         $errors   = [];
         $log      = [];
 
+        // Performance: hold all per-attachment URL sweeps until the
+        // product-level master sweep so each renamed product runs ONE
+        // wp_postmeta / wp_options LIKE scan instead of N. Re-entrancy
+        // safe — `try/finally` resets the flag even on Throwable.
+        $prev_defer = self::$defer_attachment_sweeps;
+        self::$defer_attachment_sweeps = true;
+        self::$deferred_url_buffer     = [];
+
+        try {
+
         foreach ( $targets as $aid => $target_slug ) {
             $aid    = (int) $aid;
             $role   = $roles[ $aid ] ?? [ 'type' => 'gallery', 'index' => 0 ];
@@ -646,7 +672,12 @@ final class CMC_Image_Renamer {
         // attachment lingerers in one pass. This is what finally clears
         // `data-large_image` / `data-o_data-large_image` URLs that point
         // to a different gallery item's old random-suffix filename.
-        $master_map = [];
+        // Seed the master map with every per-attachment URL pair that
+        // rename_attachment() accumulated while $defer_attachment_sweeps
+        // was true. Covers override-rename pairs (v_prev → v_new) the
+        // META_ORIGINAL-based legacy map can't reconstruct because
+        // META_ORIGINAL only points to the very first basename.
+        $master_map = self::$deferred_url_buffer;
         foreach ( $targets as $aid_loop => $_ ) {
             $aid_loop         = (int) $aid_loop;
             $current_relative = (string) get_post_meta( $aid_loop, '_wp_attached_file', true );
@@ -718,6 +749,14 @@ final class CMC_Image_Renamer {
             'errors'       => $errors,
             'log'          => $log,
         ];
+
+        } finally {
+            // Always reset, even if a Throwable escapes the loop, so a
+            // subsequent rename_product() call doesn't inherit a stale
+            // buffer or a still-set defer flag.
+            self::$defer_attachment_sweeps = $prev_defer;
+            self::$deferred_url_buffer     = [];
+        }
     }
 
     /**
@@ -2195,7 +2234,19 @@ final class CMC_Image_Renamer {
         foreach ( $size_renames as $pair ) {
             $url_map[ $baseurl . $subdir_rel . $pair['old'] ] = $baseurl . $subdir_rel . $pair['new'];
         }
-        $content_hits = self::update_post_content_urls( $url_map );
+
+        if ( self::$defer_attachment_sweeps ) {
+            // Caller (rename_product) accumulates and runs ONE merged
+            // sweep at end-of-product. Skip the per-attachment scan.
+            foreach ( $url_map as $url_old => $url_new ) {
+                if ( ! isset( self::$deferred_url_buffer[ $url_old ] ) ) {
+                    self::$deferred_url_buffer[ $url_old ] = $url_new;
+                }
+            }
+            $content_hits = 0;
+        } else {
+            $content_hits = self::update_post_content_urls( $url_map );
+        }
 
         // Reserve the new basename for the rest of this batch.
         $reserved[ strtolower( $new_core ) ] = true;
@@ -3029,41 +3080,66 @@ final class CMC_Image_Renamer {
 
         $changed = 0;
 
-        foreach ( $url_map as $old => $new ) {
-            if ( $old === $new ) { continue; }
+        // Posts-table LIKE scan is the most expensive part of the sweep:
+        // no index can serve `LIKE '%...%'` so each URL triggers a full
+        // table scan. Default OFF for the cloned-from-Amazon workflow,
+        // where product image URLs live in postmeta + options blobs but
+        // never inside post_content (Woo POD imports populate the gallery
+        // via `_thumbnail_id` / `_product_image_gallery` postmeta, not
+        // by embedding URLs in the description). Power users with
+        // editor-embedded `<img>` tags can re-enable via:
+        //
+        //     add_filter( 'cmc_image_renamer_sweep_posts', '__return_true' );
+        //
+        // Deep-content-sweep still handles the rare cross-product
+        // editor-embedded URL drift at end-of-product (see
+        // self::deep_content_sweep), so disabling this scan does NOT
+        // leave 404 image URLs in the rendered HTML for Woo product
+        // images.
+        if ( (bool) apply_filters( 'cmc_image_renamer_sweep_posts', false ) ) {
+            foreach ( $url_map as $old => $new ) {
+                if ( $old === $new ) { continue; }
 
-            $ids = $wpdb->get_col( $wpdb->prepare(
-                "SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s",
-                '%' . $wpdb->esc_like( $old ) . '%'
-            ) );
+                $ids = $wpdb->get_col( $wpdb->prepare(
+                    "SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s",
+                    '%' . $wpdb->esc_like( $old ) . '%'
+                ) );
 
-            foreach ( (array) $ids as $pid ) {
-                $pid = (int) $pid;
-                $p   = get_post( $pid );
-                if ( ! $p ) { continue; }
-                $new_content = str_replace( $old, $new, (string) $p->post_content, $count );
-                if ( $count > 0 ) {
-                    $wpdb->update(
-                        $wpdb->posts,
-                        [ 'post_content' => $new_content ],
-                        [ 'ID' => $pid ]
-                    );
-                    clean_post_cache( $pid );
-                    $changed += (int) $count;
+                foreach ( (array) $ids as $pid ) {
+                    $pid = (int) $pid;
+                    $p   = get_post( $pid );
+                    if ( ! $p ) { continue; }
+                    $new_content = str_replace( $old, $new, (string) $p->post_content, $count );
+                    if ( $count > 0 ) {
+                        $wpdb->update(
+                            $wpdb->posts,
+                            [ 'post_content' => $new_content ],
+                            [ 'ID' => $pid ]
+                        );
+                        clean_post_cache( $pid );
+                        $changed += (int) $count;
+                    }
                 }
             }
         }
 
-        // Also sweep postmeta + options for the same URL set. WooCommerce
-        // single-product gallery renders <a href> / data-src / data-large_image
-        // by resolving the FULL attachment URL through cached postmeta;
-        // theme builders (Flatsome, Elementor, Divi, ACF) embed image URLs
-        // verbatim inside serialized postmeta blobs and theme-options rows.
-        // Those embedded copies survive `update_post_meta('_wp_attached_file')`
-        // because they point to the OLD path, not the meta key we updated.
+        // Postmeta + options sweep is non-negotiable for Woo: gallery
+        // <a href> and `data-large_image` resolve through cached
+        // postmeta values that the renamer just made stale, and
+        // theme-builder option rows (Flatsome, Elementor, Divi, ACF)
+        // embed image URLs verbatim inside serialized blobs.
         $changed += self::update_postmeta_urls( $url_map );
         $changed += self::update_options_urls( $url_map );
-        $changed += self::update_yoast_indexable_urls( $url_map );
+
+        // Yoast indexable sweep is expensive (5 columns × N URLs × LIKE
+        // scan) AND Yoast regenerates indexables lazily on the next
+        // admin-side request anyway. Default OFF; re-enable via filter
+        // if your og:image meta drifts after a rename run.
+        //
+        //     add_filter( 'cmc_image_renamer_sweep_yoast', '__return_true' );
+        if ( (bool) apply_filters( 'cmc_image_renamer_sweep_yoast', false ) ) {
+            $changed += self::update_yoast_indexable_urls( $url_map );
+        }
 
         return $changed;
     }

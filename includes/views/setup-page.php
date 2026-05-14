@@ -24,6 +24,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 $nganh_query_slug  = $nganh_slug !== '' ? $nganh_slug : sanitize_title( $nganh_label );
 $amazon_url        = $nganh_label !== '' ? CMC_Setup_Controller::url_amazon_search( $nganh_label ) : '';
 $unsplash_url      = $nganh_query_slug !== '' ? CMC_Setup_Controller::url_unsplash_search( $nganh_query_slug ) : '';
+// The Size Guide step is bidirectional: it CREATES the page when the
+// industry matches apparel keywords AND cleans up (drafts page + strips
+// footer link) when the industry no longer matches. So the row needs
+// to be visible whenever there's something to do — either the industry
+// applies, or a leftover page is still hanging around from a prior
+// clone. The cheap "applies + page-exists" probe avoids cluttering the
+// UI on truly-clean sites that never touched apparel.
+$size_guide_applies      = CMC_Template_Registry::applies_to_industry(
+    'size-guide',
+    trim( $nganh_slug . ' ' . $nganh_label )
+);
+$size_guide_page_exists  = (bool) get_page_by_path( 'size-guide', OBJECT, 'page' );
+if ( ! $size_guide_page_exists ) {
+    global $wpdb;
+    $size_guide_page_exists = (bool) $wpdb->get_var( $wpdb->prepare(
+        "SELECT ID FROM {$wpdb->posts} WHERE post_type=%s AND post_status IN ('draft','pending','private') AND post_name=%s LIMIT 1",
+        'page',
+        'size-guide'
+    ) );
+}
+$size_guide_visible = $size_guide_applies || $size_guide_page_exists;
 ?>
 <div class="wrap cmc-wrap cmc-setup-wrap">
 
@@ -99,10 +120,10 @@ $unsplash_url      = $nganh_query_slug !== '' ? CMC_Setup_Controller::url_unspla
                 </p>
                 <?php if ( $amazon_url !== '' ) : ?>
                     <p>
+                        <button type="button" class="button cmc-btn-pod-setup">Run Woo POD Setup</button>
                         <a href="<?php echo esc_url( $amazon_url ); ?>" target="_blank" rel="noopener" class="button button-primary">
                             Open Amazon search &rarr;
                         </a>
-                        <button type="button" class="button cmc-btn-pod-setup">Run Woo POD Setup</button>
                         <span class="cmc-pod-setup-status cmc-setup-meta" aria-live="polite"></span>
                     </p>
                     <p class="description" style="margin-top:6px;">
@@ -118,54 +139,68 @@ $unsplash_url      = $nganh_query_slug !== '' ? CMC_Setup_Controller::url_unspla
             <div class="cmc-setup-subblock cmc-run-all-card">
                 <h3>🚀 Run All Setup Tasks</h3>
                 <p class="description">
-                    One click runs the seven product-setup tasks below in sequence — uncheck any you want to skip. Each step's status + log shows live.
+                    One click runs all product-setup tasks below in sequence — uncheck any you want to skip. Each step's status + log shows live.
                     <?php CMC_UI::help( '
                         <p>Steps execute in the order shown (dependencies matter):</p>
                         <ol>
                             <li><strong>Rename Category Name</strong> — leaves the site with a single niche category.</li>
                             <li><strong>Rewrite Title &amp; Description</strong> — generic GMC-friendly titles before image filenames are derived from them.</li>
                             <li><strong>SKU Normalize</strong> — internal SKU format.</li>
+                            <li><strong>Normalize Variation Attributes</strong> — cleans messy variation names left by Amazon imports (<code>01black</code> &rarr; <code>Black</code>, <code>02heathergrey</code> &rarr; <code>Heather Grey</code>, <code>Light Pink 1</code> merged with <code>Light Pink</code>). Applies to every <code>pa_*</code> taxonomy (color, size, material, capacity, and generic). Saves the originals as term-meta so the rename is revertible.</li>
                             <li><strong>Seed Product Reviews</strong> — auto-picks up to 5 random products that currently have zero reviews.</li>
                             <li><strong>Product Image Rename</strong> — filenames derive from the rewritten titles; uses the first (now-only) category.</li>
                             <li><strong>Regenerate Image Thumbnails</strong> — brute-force rebuilds metadata + size variants for every product image (same engine as the &quot;Repair image metadata&quot; button), so freshly renamed files have working srcsets.</li>
                             <li><strong>Heal Stale Attachment GUIDs</strong> — patches the <code>wp_posts.guid</code> column for every renamed attachment so plugins that override <code>wp_get_attachment_url</code> with <code>$post-&gt;guid</code> (FIFU / show-link-image) stop returning the pre-rename filename. Without this, CTX Feed / GMC keep emitting the old Amazon filenames even after rename succeeds.</li>
+                            <li><strong>Ensure Size Guide Page</strong> — runs only when the configured industry matches apparel-adjacent niches (fashion / apparel / footwear / kids / maternity / …). Creates an empty <code>size-guide</code> page if missing, runs the AI to fill the standard size chart wrapper, then auto-attaches the page link to the Flatsome footer block. Re-runs always overwrite the previous content. <strong>Bidirectional cleanup</strong>: cloning to a non-apparel niche on the next pass demotes the page to draft and strips the footer link — zero manual work.</li>
                         </ol>
                         <p><strong>Resume support</strong>: closing the tab mid-run halts the loop, but every step that did run leaves its postmeta markers (<code>_cmc_title_rewritten_at</code>, etc.) so clicking Run All again skips the already-finished products and picks up where you left off.</p>
                         <p><strong>Per-step errors are non-fatal</strong> — one failed product doesn\'t halt the orchestrator; the failure count surfaces in that step\'s log line at the end.</p>
                     ' ); ?>
                 </p>
-                <div class="cmc-run-all">
-                    <div class="cmc-run-all__opts">
-                        <label class="cmc-run-all__select-all"><input type="checkbox" class="cmc-run-all-select-all"> <strong>Select All</strong></label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="cat"    checked> Rename Category Name</label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="title"  checked> Rewrite Title &amp; Description <span class="cmc-run-all__meta">(AI, ~5 min)</span></label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="sku"    checked> SKU Normalize</label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="review"> Seed Product Reviews <span class="cmc-run-all__meta">(5 random, no-review only)</span></label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="image"  checked> Product Image Rename <span class="cmc-run-all__meta">(~3 min)</span></label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="regen"  checked> Regenerate Image Thumbnails <span class="cmc-run-all__meta">(~2 min)</span></label>
-                        <label><input type="checkbox" class="cmc-run-all-step" value="guidheal" checked> Heal Stale Attachment GUIDs <span class="cmc-run-all__meta">(fixes CTX Feed / GMC URLs)</span></label>
-                    </div>
-                    <div class="cmc-setup-row">
-                        <button type="button" class="button button-primary button-hero cmc-btn-run-all">Start All</button>
-                        <button type="button" class="button cmc-btn-run-all-cancel" hidden>Cancel</button>
-                        <span class="cmc-run-all-summary cmc-setup-meta" aria-live="polite"></span>
+                <div class="cmc-run-all cmc-run-all--split">
+                    <div class="cmc-run-all__col cmc-run-all__col--left">
+                        <div class="cmc-run-all__opts">
+                            <label class="cmc-run-all__select-all"><input type="checkbox" class="cmc-run-all-select-all"> <strong>Select All</strong></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="cat"    checked> Rename Category Name</label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="title"  checked> Rewrite Title &amp; Description <span class="cmc-run-all__meta">(AI, ~5 min)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="sku"    checked> SKU Normalize</label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="varnorm" checked> Normalize Variation Attributes <span class="cmc-run-all__meta">(cleans <code>01black</code>, dupes, casing)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="review"> Seed Product Reviews <span class="cmc-run-all__meta">(5 random, no-review only)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="image"  checked> Product Image Rename <span class="cmc-run-all__meta">(~3 min)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="regen"  checked> Regenerate Image Thumbnails <span class="cmc-run-all__meta">(~2 min)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="guidheal" checked> Heal Stale Attachment GUIDs <span class="cmc-run-all__meta">(fixes CTX Feed / GMC URLs)</span></label>
+                            <?php if ( $size_guide_visible ) : ?>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="sizeguide" checked> Sync Size Guide Page <span class="cmc-run-all__meta">(auto-create on apparel niches, auto-cleanup otherwise)</span></label>
+                            <?php endif; ?>
+                        </div>
+                        <div class="cmc-setup-row cmc-run-all__actions">
+                            <button type="button" class="button button-primary button-hero cmc-btn-run-all">Start All</button>
+                            <button type="button" class="button cmc-btn-run-all-cancel" hidden>Cancel</button>
+                            <span class="cmc-run-all-summary cmc-setup-meta" aria-live="polite"></span>
+                        </div>
                     </div>
 
-                    <div class="cmc-run-all-overall" hidden>
-                        <div class="cmc-run-all-overall__label">Overall progress</div>
-                        <div class="cmc-run-all-overall__bar"><span style="width:0%"></span></div>
-                        <div class="cmc-run-all-overall__meta"></div>
-                    </div>
+                    <div class="cmc-run-all__col cmc-run-all__col--right">
+                        <div class="cmc-run-all-overall" hidden>
+                            <div class="cmc-run-all-overall__label">Overall progress</div>
+                            <div class="cmc-run-all-overall__bar"><span style="width:0%"></span></div>
+                            <div class="cmc-run-all-overall__meta"></div>
+                        </div>
 
-                    <ol class="cmc-run-all-timeline">
-                        <li data-step="cat"    class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Rename Category Name</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="title"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Rewrite Title &amp; Description</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="sku"    class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">SKU Normalize</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="review" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Seed Product Reviews</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="image"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Product Image Rename</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="regen"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Regenerate Image Thumbnails</span><span class="cmc-run-all-log"></span></li>
-                        <li data-step="guidheal" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Heal Stale Attachment GUIDs</span><span class="cmc-run-all-log"></span></li>
-                    </ol>
+                        <ol class="cmc-run-all-timeline">
+                            <li data-step="cat"    class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Rename Category Name</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="title"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Rewrite Title &amp; Description</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="sku"    class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">SKU Normalize</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="varnorm" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Normalize Variation Attributes</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="review" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Seed Product Reviews</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="image"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Product Image Rename</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="regen"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Regenerate Image Thumbnails</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="guidheal" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Heal Stale Attachment GUIDs</span><span class="cmc-run-all-log"></span></li>
+                            <?php if ( $size_guide_visible ) : ?>
+                            <li data-step="sizeguide" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Sync Size Guide Page</span><span class="cmc-run-all-log"></span></li>
+                            <?php endif; ?>
+                        </ol>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>

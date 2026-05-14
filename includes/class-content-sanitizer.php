@@ -251,9 +251,22 @@ final class CMC_Content_Sanitizer {
             . "   • BANNED labels: \"Controller:\", \"Processor:\", \"Privacy:\", \"Privacy Officer:\", "
             . "\"DPO:\", \"Email:\", \"E-mail:\", \"Phone:\", \"Tel:\", \"Address:\", \"Fax:\", \"Contact:\", "
             . "\"Support:\", \"Helpdesk:\", \"Hours:\", \"Hotline:\".\n"
-            . "Instead, write the same information as inline sentences with verbs and connectives, e.g. "
-            . "\"For privacy questions or rights requests, email <email> or call <phone>; written mail may "
-            . "be sent to <address>.\" Inline punctuation (commas, semicolons, \"or\") is mandatory.\n";
+            . "Instead, write the same information as inline sentences with verbs and connectives. The "
+            . "opening phrase MUST be scoped to the CURRENT PAGE's topic — do NOT default to a "
+            . "privacy-coded opener on a non-privacy page. Worked openers by page type (mirror the "
+            . "shape, not the literal words):\n"
+            . "   • Privacy Policy / Cookie Policy → \"For privacy questions or rights requests, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • Shipping Policy                → \"For shipping questions or help tracking an order, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • Return & Refund Policy         → \"For returns, exchanges, or refund questions, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • Cancellation Policy            → \"For order cancellation requests, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • Payment Method                 → \"For payment or billing questions, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • Terms of Service               → \"For questions about these terms, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "   • DMCA Policy                    → \"For copyright takedown notices, email <email>; written notices may be sent to <address>.\"\n"
+            . "   • FAQ / Contact / About / generic → \"For any questions, email <email> or call <phone>; written mail may be sent to <address>.\"\n"
+            . "The opening noun ('privacy questions', 'shipping questions', 'returns', 'order cancellation', "
+            . "'payment or billing', 'these terms', 'copyright takedown notices') MUST match the topic of "
+            . "the current page. Do NOT carry over wording from a different page. Inline punctuation "
+            . "(commas, semicolons, \"or\") is mandatory in every variant.\n";
     }
 
     /**

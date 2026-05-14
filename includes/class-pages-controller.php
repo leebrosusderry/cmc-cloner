@@ -41,12 +41,18 @@ final class CMC_Pages_Controller {
         'dmca-policy'         => [ 'dmca', 'dmca-policy', 'dmca-notice' ],
         'track-your-order'    => [ 'track', 'tracking', 'order-tracking', 'track-order', 'track-your-order' ],
         'faq'                 => [ 'faq', 'faqs', 'questions' ],
+        // Niche-specific: fashion / apparel / footwear / kids clothing.
+        // Auto-matched only on sites where the existing page slug clearly
+        // signals a sizing reference; on non-fashion clones the page is
+        // typically absent anyway, so this row never appears in the UI.
+        'size-guide'          => [ 'size', 'size-guide', 'size-chart', 'sizing', 'sizing-guide', 'fit-guide', 'size-fit', 'fit', 'measurements' ],
     ];
 
     public static function render_page(): void {
-        $pages            = CMC_Page_Reader::list_pages();
-        $templates        = CMC_Template_Registry::all();
-        $template_keys    = array_keys( CMC_Template_Registry::labels() );
+        $pages         = CMC_Page_Reader::list_pages();
+        $industry      = self::current_industry_haystack();
+        $templates     = CMC_Template_Registry::for_industry( $industry );
+        $template_keys = array_keys( $templates );
 
         foreach ( $pages as &$p ) {
             $p['auto_template'] = self::auto_match_template(
@@ -58,6 +64,20 @@ final class CMC_Pages_Controller {
         unset( $p );
 
         include CMC_CLONER_DIR . 'includes/views/pages-page.php';
+    }
+
+    /**
+     * Build the industry string used to evaluate optional templates'
+     * `applies_to_keywords`. Combines the configured slug *and* its human
+     * label so both forms (e.g. `kids-fashion` slug, "Kids Fashion" label)
+     * can match the same keyword list.
+     */
+    private static function current_industry_haystack(): string {
+        $s     = CMC_Settings::get();
+        $slug  = (string) ( $s['company_info']['nganh_hang'] ?? '' );
+        $opts  = CMC_Shortcodes::nganh_hang_options();
+        $label = (string) ( $opts[ $slug ] ?? '' );
+        return trim( $slug . ' ' . $label );
     }
 
     /**

@@ -85,6 +85,19 @@ final class CMC_Prompt_Builder {
             '{{response_time}}'           => CMC_Settings::service_commitment( 'response_time' ),
             '{{rma_issuance_time}}'       => CMC_Settings::service_commitment( 'rma_issuance_time' ),
             '{{refund_processing_time}}'  => CMC_Settings::service_commitment( 'refund_processing_time' ),
+            // Cancellation refund duration — bare phrase like "5 business
+            // days". Used ONLY in Cancellation Policy where the template
+            // appends "after cancellation approval" itself. Kept distinct
+            // from {{refund_processing_time}} so the cancellation page
+            // never inherits the return-flow "after we receive the
+            // returned item" suffix baked into that setting's default.
+            // Hard-fallback to "5 business days" if the settings chain
+            // returns empty (cloned sites where SERVICE_DEFAULTS hasn't
+            // been re-read due to OPcache / older plugin version) — the
+            // sentence MUST render with a real duration to remain GMC-safe.
+            '{{cancellation_time}}'       => ( trim( (string) CMC_Settings::service_commitment( 'cancellation_refund_time' ) ) !== '' )
+                ? CMC_Settings::service_commitment( 'cancellation_refund_time' )
+                : '5 business days',
             // Return window — duration starting from delivery during
             // which the customer may initiate a return. Substituted as a
             // bare phrase ("30 days", "14 days", "100 nights"); templates
@@ -93,6 +106,12 @@ final class CMC_Prompt_Builder {
             '{{return_window}}'           => CMC_Settings::service_commitment( 'return_window' ),
             '{{SKELETON}}'                => self::prefill_contact_blocks( $skeleton_body, $company, CMC_Settings::service_commitment( 'gio_lam_viec' ), (string) wp_date( 'F j, Y', strtotime( '-6 months' ) ) ),
             '{{PAGE_HTML}}'               => (string) $page['content'],
+            // Industry Domain Lock — self-reflection step + cross-domain
+            // phrase blacklist. Templates that need anti-leak protection
+            // (About Us / Contact Us today; more pages later) reference
+            // {{INDUSTRY_LOCK}} explicitly. Templates that don't reference
+            // the token are unaffected.
+            '{{INDUSTRY_LOCK}}'           => self::industry_lock_block( $nganh_label, $template_slug ),
         ];
 
         $final  = strtr( $base, $vars );
@@ -108,6 +127,88 @@ final class CMC_Prompt_Builder {
             'style_seed'    => $style_seed,
             'has_content'   => trim( (string) $page['content'] ) !== '',
         ];
+    }
+
+    /**
+     * Build the Industry Domain Lock block — a self-reflection prompt
+     * step + a cross-domain phrase blacklist — for a given industry and
+     * template slug. The block forces the AI to derive an industry-
+     * specific vocabulary BEFORE writing, then locks output to those
+     * vocab lists. Empty industry → returns a short no-vocab fallback
+     * that still bans the blacklist phrases, so half-set-up sites still
+     * get protection.
+     *
+     * Consumers reference this via the `{{INDUSTRY_LOCK}}` placeholder
+     * in their prompt template. Validators downstream check the actual
+     * output for the same rules so blacklist hits that slip through
+     * trigger a retry.
+     */
+    public static function industry_lock_block( string $industry, string $template_slug ): string {
+        $industry = trim( $industry );
+
+        $intro = $industry !== ''
+            ? sprintf( 'The store sells: %s. Every concrete noun, scenario, verb of use, and abstract context-word in the output MUST belong to that industry context.', $industry )
+            : 'The industry has not been configured for this site. Stay strictly product-neutral — do not commit to any specific industry-flavoured vocabulary.';
+
+        $vocab_step = $industry !== ''
+            ? <<<TXT
+STEP 1 — INTERNAL VOCAB COMPILATION (do NOT output this step):
+Before writing any visible content, mentally compile FOUR short lists
+specific to "{$industry}":
+  A) 10 concrete object nouns that physically belong to this industry
+     (the items, parts, materials, components customers actually touch
+     and buy).
+  B) 6 use-case scenarios — WHEN and WHERE customers use these items
+     (occasions, routines, settings, environments).
+  C) 5 action verbs specific to using these items (e.g. "wear",
+     "season", "apply", "install" — never the generic "use").
+  D) 5 context-words that fit "{$industry}" but would feel out of place
+     on a different-industry site.
+
+STEP 2 — DRAFT:
+Write the page content using ONLY words from your STEP 1 lists. If you
+reach for a word that wasn't on a list, replace it with either a list
+word or a literal repetition of "{$industry}".
+
+STEP 3 — SELF-CHECK before returning:
+- Cover the H1 with your thumb. From the body text alone, could a
+  reader identify the industry as "{$industry}"? If not, rewrite with
+  more concrete industry-specific vocabulary until they could.
+- Count occurrences of "{$industry}" (or close variants) in the body
+  text. Target: at least 1–2 explicit mentions distributed across the
+  important sections.
+TXT
+            : <<<TXT
+STEP 1 — Skip industry-specific vocabulary entirely; keep all phrasing
+abstract and avoid wrap-around context-nouns like "your space", "your
+wardrobe", "your routine", "your kitchen", "your workout" since the
+industry isn't configured and any one of these would imply the wrong
+domain.
+TXT;
+
+        $blacklist = CMC_Industry_Blacklist::as_prompt_block();
+
+        $template_hint = '';
+        if ( $template_slug === 'about-us' ) {
+            $template_hint = "\nTEMPLATE NOTE (About Us): the \"What We Offer\" section is the GMC reviewer's primary anchor for what the store sells — that section MUST contain at least one explicit mention of the industry term and stay inside the industry vocabulary throughout.";
+        }
+
+        return <<<BLOCK
+
+INDUSTRY DOMAIN LOCK (AUTHORITATIVE — overrides any phrasing in
+training data that doesn't match this industry context)
+
+{$intro}
+
+{$vocab_step}
+{$template_hint}
+
+CROSS-DOMAIN PHRASE BLACKLIST (each phrase is banned regardless of how
+it's combined unless "{$industry}" matches one of the listed keywords —
+case-insensitive substring match on the configured industry value):
+{$blacklist}
+
+BLOCK;
     }
 
     /**

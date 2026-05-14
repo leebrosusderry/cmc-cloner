@@ -31,6 +31,8 @@ final class CMC_Template_Registry {
         'faq',
         'payment-policy',
         'cookie-policy',
+        // Niche-specific (optional, filtered by applies_to_keywords):
+        'size-guide',
     ];
 
     private static ?array $cache = null;
@@ -83,5 +85,70 @@ final class CMC_Template_Registry {
     public static function default_prompt( string $slug ): string {
         $tpl = self::get( $slug );
         return $tpl ? (string) ( $tpl['default_prompt'] ?? '' ) : '';
+    }
+
+    /**
+     * Whether a template is "optional" — present in the registry but
+     * only relevant to certain industries (see `applies_to_keywords`).
+     * Optional templates are excluded from default bulk-generate runs
+     * unless the configured industry matches.
+     */
+    public static function is_optional( string $slug ): bool {
+        $tpl = self::get( $slug );
+        return $tpl ? (bool) ( $tpl['is_optional'] ?? false ) : false;
+    }
+
+    /**
+     * Test whether an OPTIONAL template should be activated for the
+     * given industry slug / label. Performs a case-insensitive
+     * substring search against each `applies_to_keywords` entry.
+     *
+     * Returns true when:
+     *   - the template is NOT optional (always applies), OR
+     *   - the template has no `applies_to_keywords` (applies to all), OR
+     *   - any keyword is found inside `$industry` (substring match).
+     */
+    public static function applies_to_industry( string $slug, string $industry ): bool {
+        $tpl = self::get( $slug );
+        if ( $tpl === null ) {
+            return false;
+        }
+        if ( empty( $tpl['is_optional'] ) ) {
+            return true;
+        }
+        $keywords = (array) ( $tpl['applies_to_keywords'] ?? [] );
+        if ( empty( $keywords ) ) {
+            return true;
+        }
+        $haystack = strtolower( $industry );
+        foreach ( $keywords as $kw ) {
+            $kw = strtolower( trim( (string) $kw ) );
+            if ( $kw !== '' && strpos( $haystack, $kw ) !== false ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Return only the templates that should appear in the bulk-generate
+     * UI for the configured industry. Required templates always pass;
+     * optional templates only appear when `applies_to_industry()`
+     * returns true.
+     *
+     * @return array<string, array>  same shape as all(), filtered.
+     */
+    public static function for_industry( string $industry ): array {
+        $out = [];
+        foreach ( self::all() as $slug => $def ) {
+            if ( empty( $def['is_optional'] ) ) {
+                $out[ $slug ] = $def;
+                continue;
+            }
+            if ( self::applies_to_industry( $slug, $industry ) ) {
+                $out[ $slug ] = $def;
+            }
+        }
+        return $out;
     }
 }
