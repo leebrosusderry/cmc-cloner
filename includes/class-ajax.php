@@ -37,6 +37,8 @@ final class CMC_Ajax {
     public const ACTION_RUN_ALL_POD_MARK_DONE  = 'cmc_cloner_run_all_pod_mark_done';
     public const ACTION_RUN_ALL_HEAL_GUIDS     = 'cmc_cloner_run_all_heal_guids';
     public const ACTION_RUN_ALL_SIZE_GUIDE     = 'cmc_cloner_run_all_size_guide';
+    public const ACTION_RUN_ALL_BUILD_SUBCATS  = 'cmc_cloner_run_all_build_subcats';
+    public const ACTION_REVERT_SUBCATS         = 'cmc_cloner_revert_subcats';
     public const ACTION_VARIATION_NORMALIZE_BATCH = 'cmc_cloner_variation_normalize_batch';
     public const ACTION_REVIEW_SCAN          = 'cmc_cloner_review_scan';
     public const ACTION_REVIEW_SEED          = 'cmc_cloner_review_seed';
@@ -71,6 +73,8 @@ final class CMC_Ajax {
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_POD_MARK_DONE, [ self::class, 'handle_run_all_pod_mark_done' ] );
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_HEAL_GUIDS,    [ self::class, 'handle_run_all_heal_guids' ] );
         add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_SIZE_GUIDE,    [ self::class, 'handle_run_all_size_guide' ] );
+        add_action( 'wp_ajax_' . self::ACTION_RUN_ALL_BUILD_SUBCATS, [ self::class, 'handle_run_all_build_subcats' ] );
+        add_action( 'wp_ajax_' . self::ACTION_REVERT_SUBCATS,        [ self::class, 'handle_revert_subcats' ] );
         add_action( 'wp_ajax_' . self::ACTION_VARIATION_NORMALIZE_BATCH, [ self::class, 'handle_variation_normalize_batch' ] );
         add_action( 'wp_ajax_' . self::ACTION_REVIEW_SCAN,          [ self::class, 'handle_review_scan' ] );
         add_action( 'wp_ajax_' . self::ACTION_REVIEW_SEED,          [ self::class, 'handle_review_seed' ] );
@@ -761,6 +765,37 @@ final class CMC_Ajax {
             'skipped' => false,
             'message' => $created ? 'Page created + content generated + added to footer.' : 'Content regenerated (overwrote previous version) + footer ensured.',
         ] );
+    }
+
+    /**
+     * Run-All step: split the single niche product_cat into 5-8 GMC-
+     * friendly sub-categories via one AI call, then distribute existing
+     * products into those sub-categories by title-keyword scoring.
+     * Idempotent — re-running re-uses the cached plan and only assigns
+     * products that don't yet carry a backup snapshot.
+     *
+     * Heavy implementation lives in CMC_Category_Builder; this handler
+     * is a thin guard + envelope.
+     */
+    public static function handle_run_all_build_subcats(): void {
+        self::guard();
+        $result = CMC_Category_Builder::run();
+        if ( empty( $result['success'] ) ) {
+            wp_send_json_error( [ 'message' => (string) ( $result['message'] ?? 'Failed.' ) ], 500 );
+        }
+        wp_send_json_success( $result );
+    }
+
+    /**
+     * Manual revert for the sub-category build: restores every product's
+     * pre-distribution term assignment from `_cmc_orig_cats` postmeta,
+     * then deletes only the terms tagged `_cmc_auto_created_subcat=1`.
+     * Surfaced from the Site Setup screen — not part of Run All.
+     */
+    public static function handle_revert_subcats(): void {
+        self::guard();
+        $result = CMC_Category_Builder::revert();
+        wp_send_json_success( $result );
     }
 
     /**

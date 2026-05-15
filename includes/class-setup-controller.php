@@ -354,6 +354,14 @@ Bước 5 — proceed Layer 1+
    Lý do: FAQ trên homepage đã được loại bỏ khỏi scope — mọi nội dung Q&A thuộc policy page riêng. Homepage xuất hiện FAQ/Answers dưới bất kỳ tên nào đều VIOLATE rule này.
    Verify: grep output cho "accordion", "answered", "frequently", "questions", "q&a", "help center", "good to know", "the details", "<details", "<summary" → phải = 0.
 
+* H0b — ❌ TUYỆT ĐỐI CẤM Testimonials / Customer Reviews / Quote-from-Customer / Star Ratings dưới MỌI hình thức, MỌI tên gọi, MỌI vị trí. Cấm tự bịa lời khen của khách hàng — GMC coi review giả là Misrepresentation và đình chỉ account.
+   Cấm biến thể tên section: "Testimonials", "Reviews", "Customer Reviews", "What Our Customers Say", "Customer Voices", "Loved By", "Praise", "Kind Words", "From Our Customers", "Customer Stories", "5-Star Reviews".
+   Cấm pattern: blockquote chứa lời nói khách hàng + tên người + thành phố/quốc gia; quote-card grid 2-3-4 cột với speech-mark; "stars rating" cụm icon ★★★★★ kèm số rating; "Trusted by N customers" + counter.
+   Cấm shortcodes: [testimonial], [testimonials_slider], [ux_stars rating="..."]; bất kỳ <blockquote> nào có pattern "... — Name, City".
+   Cấm cả khi skeleton chính KHÔNG có testimonial slot — AI không được tự ý thêm.
+   Lý do: clone site không có khách hàng thật để trích dẫn; mọi quote do AI tạo ra = review giả = GMC Misrepresentation. Trust signals hợp pháp duy nhất là brand-story facts đã verify trong About Us / Contact.
+   Verify: grep output cho "testimonial", "review", "loved by", "kind words", "stars", "rating", "— [A-Z][a-z]+, [A-Z]" → phải = 0.
+
 * H1 — Đúng 1 <h1> toàn trang, trong hero đầu tiên. Còn lại <h2>/<h3>.
 * H2 — Zero shipping claims. Cấm "Free shipping", "Ships in X days", thời gian/vùng/ngưỡng ship, hãng vận chuyển. Nếu cần đề cập shipping ở bất kỳ chỗ nào → dùng "See our Shipping Policy page for options and timelines."
 * H3 — Zero tên thương hiệu nổi tiếng (Nike, Adidas, Puma, Apple, Samsung, Gucci, LV, Chanel, Disney, Marvel, Pixar, Ray-Ban, Oakley, Converse, Vans, Getty, Shutterstock, Fisher-Price, Lego, Melissa & Doug, Gymshark, Lululemon…) trong text / alt / URL.
@@ -390,41 +398,52 @@ Bước 5 — proceed Layer 1+
     * Featured.SingleCollection → gọi là "This Season's Edit" / "Studio Favorites", link /shop/. Cấm đặt tên collection riêng.
 * Lý do: GMC đối chiếu category claims trên homepage với taxonomy thực tế. Homepage claim 5 sub-cat nhưng feed chỉ có 1 → Misrepresentation. 1 category = 100% khớp mọi shop trong niche.
 ───────────────────────────────────────────────
-🖼️ LAYER 2 — IMAGE RESEARCH PROTOCOL (AI tự tìm, user duyệt tay)
-AI BẮT BUỘC tự đi tìm real image URLs từ open stock CDN cho mọi slot ảnh chủ lực. KHÔNG dùng SVG placeholder, KHÔNG dùng biến {UPLOAD_URL}.
-2.1. Transparency Contract — IN Ở ĐẦU OUTPUT
-⚠️ IMAGE VERIFICATION DISCLAIMER
-AI không preview được ảnh live. Các URL dưới đây là best-effort selection. User phải manually preview và thay bằng tay ảnh có logo / lệch concept / 404.
-2.2. Sources (mix để tránh trùng)
-1. Pexels CDN: https://images.pexels.com/photos/{ID}/pexels-photo-{ID}.jpeg?auto=compress&cs=tinysrgb&w=1200
-2. Pixabay CDN: https://cdn.pixabay.com/photo/YYYY/MM/DD/HH/MM/slug-{ID}_1280.jpg
-3. Unsplash CDN: https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1200&q=80
-* Prefer Pexels ID ≤ 7 chữ số
-* KHÔNG URL trang web /photos/ hay /s/photos/ — chỉ direct CDN
-* KHÔNG duplicate ID qua 2 slot
-2.3. Concept Brief (viết 1 dòng trước khi chọn ID)
-[niche-level item] + [composition: flat-lay | still-life | detail] + [mood] + [surface/bg]
-2.4. Selection Criteria
-* ✅ Flat-lay / still-life / close-up (brand-safer)
-* ✅ Subject 40-70% frame, lighting soft/natural
-* ✅ Palette harmony với {COLOR}
-* ❌ Avoid: mặt model rõ, lifestyle with people, logos, watermarks, date stamps
-2.5. Dimensions
-Slot	Ratio	w
-Hero landscape	4:3	1200
-Hero portrait	3:4	1200 + class is-portrait
-Mosaic	~1:1 / 4:3	1200
-CTA split	4:3	1200
-Card thumb	varies	800
-2.6. Cohesion
-* Cùng 1 lookbook: lighting temperature nhất quán, compatible color story
-* Mix composition: 1 flat-lay + 1 detail + 1 still-life
-* Không 3+ ảnh cùng angle liên tiếp
-2.7. Alt Text Format
-✅ [niche-level item] + [composition] + [surface/bg]
-❌ Shop name, brand name, SEO-stuffing, descriptive product noun cụ thể
-2.8. Image Research Notes (BẮT BUỘC bảng ngay sau Disclaimer)
-Slot	Concept brief	URL	Source	Reason
+🖼️ LAYER 2 — IMAGE URL POLICY (zero-broken-link guarantee)
+
+Mọi slot {{IMG_*_URL}} trong skeleton PHẢI là một URL ảnh thực, trực tiếp, 100% chắc chắn không 404. KHÔNG SVG placeholder, KHÔNG token {UPLOAD_URL}, KHÔNG URL trang web (chỉ direct CDN).
+
+2.1. URL FORMAT — Picsum (DEFAULT, guaranteed 200, không bao giờ 404)
+
+Mỗi slot ảnh PHẢI dùng đúng pattern này:
+
+  https://picsum.photos/seed/{SEED}/{WIDTH}/{HEIGHT}
+
+Trong đó:
+* {SEED} = chuỗi ASCII lowercase, kebab-case, kết hợp niche-slug + slot + index để mỗi URL deterministic ra 1 ảnh khác nhau. Ví dụ (tham khảo):
+    - hero landscape   → picsum.photos/seed/fashion-apparel-hero/1200/800
+    - story image      → picsum.photos/seed/fashion-apparel-story/1200/900
+    - mosaic tile 1-5  → picsum.photos/seed/fashion-apparel-mosaic-1/1200/1200 ... -5
+    - cta split        → picsum.photos/seed/fashion-apparel-cta/1200/900
+    - intent card 1-4  → picsum.photos/seed/fashion-apparel-intent-1/800/800 ... -4
+* {WIDTH}/{HEIGHT}      = theo dimension table 2.3.
+* Cùng SEED → cùng ảnh forever (deterministic, cache-friendly). Khác SEED → ảnh khác.
+
+Lý do bắt buộc Picsum làm DEFAULT:
+- Service public, uptime cao, KHÔNG bao giờ trả 404 với pattern URL đúng.
+- Không phụ thuộc Pexels/Unsplash ID có thật (AI không thể fetch để verify → rủi ro 404 rất cao nếu dùng các source đó).
+- Deterministic: clone 2 site cùng niche → cùng SEED → cùng ảnh; muốn variety thì đổi prefix SEED.
+
+2.2. ALTERNATIVE SOURCES (chỉ khi CHẮC CHẮN URL còn sống — mặc định fallback về Picsum khi không chắc):
+* Pexels CDN: https://images.pexels.com/photos/{ID}/pexels-photo-{ID}.jpeg?auto=compress&cs=tinysrgb&w=1200
+* Unsplash CDN: https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1200&q=80
+
+❌ KHÔNG dùng Pixabay date-path URLs — pattern dễ break.
+❌ KHÔNG dùng URL trang web (/photos/, /s/photos/) — chỉ direct CDN.
+❌ Nếu không chắc URL còn sống → BẮT BUỘC fallback Picsum, không guess.
+
+2.3. DIMENSIONS — match slot type:
+  Hero landscape   → 1200x800   (3:2)
+  Hero portrait    → 900x1200   (3:4, kèm class is-portrait nếu skeleton dùng)
+  Story image      → 1200x900   (4:3)
+  Mosaic tile      → 1200x1200  (1:1)
+  CTA split        → 1200x900   (4:3)
+  Intent card      → 800x800    (1:1)
+
+2.4. UNIQUENESS — mỗi slot có SEED khác nhau. Không 2 slot dùng cùng SEED (tránh trùng ảnh trên trang).
+
+2.5. ALT TEXT FORMAT (cho mỗi {{IMG_*_ALT}}):
+✅ Plain English 6-10 từ, mood/composition. Ví dụ: "soft morning light over neutral linen surface".
+❌ Tên shop, tên brand, SEO-stuff, danh từ sản phẩm cụ thể, từ "Picsum" hay tên CDN.
 ───────────────────────────────────────────────
 🧱 LAYER 3 — SKELETON (server-picked layout, AI ONLY fills tokens)
 
@@ -456,57 +475,52 @@ AI KHÔNG được tự thiết kế lại layout. Nhiệm vụ: thay thế 100%
 
 🎨 LAYER 4 — CSS (đã setup 1 lần ở child theme — KHÔNG in lại trong output)
 
-Mọi class CSS skeleton đang dùng (`.nt-l1-*`, `.nt-eyebrow`, `.nt-hero-media`, `.nt-story-media`, `.nt-testimonial-card`, …) đã được paste vào child theme style.css. AI không cần in lại block CSS nào trong output.
+Mọi class CSS skeleton đang dùng (`.nt-l1-*`, `.nt-eyebrow`, `.nt-hero-media`, `.nt-story-media`, …) đã được paste vào child theme style.css. AI không cần in lại block CSS nào trong output.
 
 ───────────────────────────────────────────────
 ✅ LAYER 5 — SELF-CHECK (grep trước khi trả output)
-* [ ] Layer 0 fetch thành công, Brand Anchor table đã in
-* [ ] Mọi fact homepage có trong Brand Anchor table (year / location / team / materials / process)
-* [ ] Tone of voice match "Tone keywords" đã extract từ About Us
 * [ ] Count <h1> = 1 (skeleton đảm bảo — chỉ kiểm chứng AI không thêm <h1> ngoài skeleton)
-* [ ] KHÔNG còn dãy ký tự "{{" nào trong skeleton block của output (mọi placeholder đã được fill — grep skeleton block cho chuỗi "{{" → kết quả phải = 0)
+* [ ] KHÔNG còn dãy ký tự "{{" nào trong output (mọi placeholder đã được fill — count "{{" = 0)
 * [ ] Cấu trúc shortcode khớp 100% skeleton: số [section] / [row] / [col] không đổi, thứ tự không đổi, attribute không đổi
 * [ ] Tên class CSS giữ nguyên (.nt-l*-*, .nt-eyebrow, .nt-hero-media …) — không rename, không thêm class mới
 * [ ] Grep accordion | answered | frequently | questions | q&a | "help center" | "good to know" | "the details" | <details | <summary → = 0
+* [ ] Grep testimonial | review | "loved by" | "kind words" | "★" | "5-star" | "— [A-Z][a-z]+, [A-Z]" → = 0 (no fake reviews; xem H0b)
 * [ ] Grep free ship | ships in | $ | % off | today only | limited time | act now | !! → = 0
 * [ ] Grep brand names (Nike, Adidas, Apple, Disney, Marvel, Ray-Ban, Oakley, Gucci, LV, Chanel, Puma, Samsung, Pixar, Converse, Vans, Fisher-Price, Lego, Melissa & Doug, Gymshark, Lululemon) → = 0
 * [ ] Grep tên sản phẩm/collection bịa (Ora, Meadow, Moonbeam Edit, Core Training Tee…) → = 0
 * [ ] Grep descriptive product nouns: stacker, plush, teething, tote, clutch, crossbody, shoulder bag, tee, dumbbell, band, kettlebell, belt, serum, moisturizer, sneaker, hoodie, mug, candle, backpack, leash → = 0
 * [ ] Mọi `link="..."` / `href="..."` thuộc whitelist {/, /shop/, /about-us/, /contact-us/, /cart/} → 100%
 * [ ] Không có [ux_products cat="..."]
-* [ ] Mọi <img>: giữ nguyên `loading="lazy"` + `referrerpolicy="no-referrer"` từ skeleton, alt mới phải là plain English ≤ 10 từ, không chứa shop/brand
-* [ ] Mọi URL ảnh từ Pexels/Pixabay/Unsplash phải tồn tại thực — nếu nghi 404 thì pick URL khác
-* [ ] Không URL ảnh nào duplicate trong toàn output
+* [ ] Mọi <img>: giữ nguyên `loading="lazy"` + `referrerpolicy="no-referrer"` từ skeleton, alt là plain English ≤ 10 từ, không chứa shop/brand
+* [ ] Mọi URL ảnh tuân thủ Layer 2 (Picsum DEFAULT). Khi không chắc Pexels/Unsplash ID còn sống → fallback Picsum với SEED riêng. Không slot nào dùng SEED trùng slot khác.
 * [ ] Visible text ≥ 250 từ (skeleton tối giản — không over-write content)
-* [ ] Disclaimer + Brand Anchor Table + Layout Map + Image Research Notes đã in đầu output, trước skeleton đã fill
 
 ───────────────────────────────────────────────
-📤 LAYER 6 — OUTPUT FORMAT
+📤 LAYER 6 — OUTPUT FORMAT (chỉ một thứ duy nhất: filled skeleton)
 
-▸ Thứ tự trả về (BẮT BUỘC):
-1. ⚠️ Image Verification Disclaimer (1-2 câu)
-2. 🪢 Brand Anchor Table (từ Layer 0)
-3. 🎲 Layout Map (1 dòng): VARIANT_SEED={{layout-number-random}} → LAYOUT_ID={{LAYOUT_ID}} ({{LAYOUT_NAME}})
-4. 🖼️ Image Research Notes (bảng): Slot · Concept brief · URL · Source · Reason
-5. 🧬 Filled Skeleton — block HTML/shortcode duy nhất, paste-ready vào Flatsome UX Builder.
-   * Sao chép verbatim từ {{SKELETON_HTML}}, replace 100% các placeholder
-   * KHÔNG in CSS, KHÔNG thêm wrapper, KHÔNG thêm comment HTML
-6. 🛠️ JSON-LD Setup hint (1 đoạn ngắn — KHÔNG paste vào page):
-   * RankMath → Titles & Meta → Organization
-   * Yoast SEO → Settings → Site representation
-   * SEOPress → Titles & Metas → Knowledge Graph
-7. ✅ Confirmation Table (8 rows):
+▸ Trả về DUY NHẤT block HTML/shortcode đã fill (Filled Skeleton), wrap trong một markdown code-fence ```html … ```. Không header, không disclaimer, không bảng nào, không text mô tả trước/sau code-fence.
 
-| Check                                                                                | Status |
-|--------------------------------------------------------------------------------------|--------|
-| (a) Brand Anchor fetch + verify pass (Layer 0)                                       | ✅     |
-| (b) Mọi fact homepage match Brand Anchor (no fabricated facts)                       | ✅     |
-| (c) Skeleton {{LAYOUT_ID}} loaded + 100% placeholder đã được fill                      | ✅     |
-| (d) Cấu trúc shortcode + class CSS giữ nguyên skeleton (zero structural change)      | ✅     |
-| (e) Zero shipping claims / brand names / hardcoded prices / FAQ language             | ✅     |
-| (f) Zero descriptive product nouns / fabricated product names                        | ✅     |
-| (g) Mọi link trong whitelist {/, /shop/, /about-us/, /contact-us/, /cart/}           | ✅     |
-| (h) Mọi <img> giữ lazy + referrerpolicy + alt ≤10 từ, không brand/shop name          | ✅     |
+❌ TUYỆT ĐỐI KHÔNG in các thứ này — chúng chỉ là tài liệu nội bộ cho AI tự dùng khi generate, KHÔNG bao giờ paste vào output:
+   - "⚠️ IMAGE VERIFICATION DISCLAIMER" hay bất kỳ disclaimer nào
+   - "🪢 Brand Anchor Table" hay bảng fact extract từ About Us/Contact (chỉ dùng để LOCK content nội bộ — không in)
+   - "🎲 Layout Map" / dòng VARIANT_SEED=... → LAYOUT_ID=...
+   - "🖼️ Image Research Notes" / bảng Slot · Concept brief · URL · Source · Reason
+   - "🛠️ JSON-LD Setup hint" / RankMath / Yoast / SEOPress — plugin TỰ ĐỘNG inject Product + Organization JSON-LD qua `CMC_Schema` (hook `woocommerce_structured_data_product` + `wpseo_schema_graph`) và auto-sync Yoast Site Representation từ Settings. Không cần user setup tay, AI không cần nhắc.
+   - "✅ Confirmation Table" / bảng (a)...(h) status
+   - Bất kỳ HTML comment / commentary / preamble / postscript / dòng chú thích nào
+
+✅ Output đúng hình dạng:
+```html
+[section ...]
+... (filled skeleton, mọi {{PLACEHOLDER}} đã replace)
+[/section]
+```
+
+Trong đó dòng đầu là ```html (3 backtick + "html"), tiếp đến filled skeleton bắt đầu bằng `[section ...]`, kết thúc bằng `[/section]`, dòng cuối là ``` (3 backtick đóng). KHÔNG ký tự nào trước ```html hoặc sau ``` đóng.
+
+✅ Nội dung skeleton = copy verbatim {{SKELETON_HTML}}, replace 100% các {{PLACEHOLDER}} bằng giá trị tuân thủ Image Budget + Text Budget + Layer 1 rules + Brand Anchor lock (internal-only).
+
+✅ Brand Anchor extract (Layer 0) vẫn BẮT BUỘC chạy nội bộ — chỉ là không in ra output cuối.
 
 ───────────────────────────────────────────────
 🔧 LAYER 7 — EXECUTION ORDER (workflow)
@@ -516,7 +530,7 @@ Mọi class CSS skeleton đang dùng (`.nt-l1-*`, `.nt-eyebrow`, `.nt-hero-media
 [3] Layer 2: Research image URLs theo từng slot trong Image Budget
 [4] Layer 3: Đọc skeleton HTML, fill mỗi placeholder theo Text Budget + Layer 1 rules + Brand Anchor lock
 [5] Layer 5: Self-check toàn bộ output (đặc biệt: count `{{` = 0, structure unchanged)
-[6] Layer 6: In output theo đúng thứ tự
+[6] Layer 6: In RA DUY NHẤT filled skeleton wrap trong ```html ... ``` markdown code-fence. KHÔNG in disclaimer / brand table / layout map / image notes / json-ld / confirmation table / commentary.
 
 ═══════════════════════════════════════════════
 

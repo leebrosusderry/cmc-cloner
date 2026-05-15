@@ -784,6 +784,8 @@ final class CMC_Settings {
                     'runAllPodMarkDone'   => CMC_Ajax::ACTION_RUN_ALL_POD_MARK_DONE,
                     'runAllHealGuids'     => CMC_Ajax::ACTION_RUN_ALL_HEAL_GUIDS,
                     'runAllSizeGuide'     => CMC_Ajax::ACTION_RUN_ALL_SIZE_GUIDE,
+                    'runAllBuildSubcats'  => CMC_Ajax::ACTION_RUN_ALL_BUILD_SUBCATS,
+                    'revertSubcats'       => CMC_Ajax::ACTION_REVERT_SUBCATS,
                     'variationNormalizeBatch' => CMC_Ajax::ACTION_VARIATION_NORMALIZE_BATCH,
                     'reviewScan'          => CMC_Ajax::ACTION_REVIEW_SCAN,
                     'reviewSeed'          => CMC_Ajax::ACTION_REVIEW_SEED,

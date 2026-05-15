@@ -46,7 +46,7 @@ Returns & Refunds (from the site's Return & Refund Policy)
 - Returns scope: Defective AND non-defective products are both accepted. Do NOT narrow this to "defective or damaged only".
 - Product condition required: Only new products — unopened, in original packaging, unused, with all tags attached.
 - Return method: By mail only. Do NOT mention in-store returns or drop-off locations.
-- Return shipping: a prepaid return shipping label is included in the package; {{ten_doanh_nghiep}} covers 100% of return shipping. The customer does NOT pay for return shipping.
+- Return shipping: once the return request is approved, a prepaid return shipping label is emailed to the customer (the label is NEVER pre-included inside the original outbound package). {{ten_doanh_nghiep}} covers 100% of return shipping. The customer does NOT pay for return shipping.
 - Restocking fee: No restocking fee.
 - Exchanges: Yes, accepted within the same {{return_window}} window from delivery.
 - Refund method: original payment method, in USD.
@@ -57,7 +57,7 @@ Policy page names to link from FAQ answers
 - The correct name for the returns page is exactly "Return & Refund Policy" (a SINGLE combined page). Do NOT write "Return Policy" or "Refund Policy" as separate page names — those pages no longer exist on the site. Use "See our Return & Refund Policy for full terms." as the standard pointer.
 - The shipping page name is "Shipping Policy". Use "See our Shipping Policy for full timelines."
 - The cancellation page name is "Cancellation Policy". Use "See our Cancellation Policy for full terms."
-- The privacy page is "Privacy Policy"; the cookie page is "Cookie Policy".
+- The privacy page is "Privacy Policy". Cookie Policy is intentionally NOT referenced from FAQ — see the COOKIE SCOPE rule in STRICT RULES below.
 
 REQUIRED SECTIONS
 Produce between 10 and 14 question-answer pairs, grouped under the categories below. EVERY category must be represented by at least one Q/A (generic but accurate if the source is thin) because GMC reviewers look for each of these topics on the FAQ page:
@@ -70,21 +70,21 @@ Produce between 10 and 14 question-answer pairs, grouped under the categories be
    Each answer MUST close by deferring to the Shipping Policy for full details.
 3. Returns, Exchanges & Refunds — MUST include at least the following four Q/A:
    (a) "What is your return window?" — {{return_window}} from the date of delivery, for both defective and non-defective products, in new and unused condition in original packaging.
-   (b) "Who pays for return shipping?" — {{ten_doanh_nghiep}} covers it. A prepaid return shipping label is included in the package and sent by email with the RMA; the customer does NOT pay for return shipping. No restocking fee.
+   (b) "Who pays for return shipping?" — {{ten_doanh_nghiep}} covers it. Once the return request is approved, a prepaid return shipping label is emailed to the customer (it is NEVER pre-included inside the original outbound package); the customer does NOT pay for return shipping. No restocking fee.
    (c) "Do you accept exchanges?" — Yes, exchanges are accepted within the same {{return_window}} window from delivery for new, unused products.
    (d) "How long does a refund take?" — Refunds are issued to the original payment method in USD {{refund_processing_time}}; the bank may add 1–2 additional business days before the refund appears on the statement.
    Each answer MUST close by deferring to the Return & Refund Policy for full terms.
 4. Payments — MUST include at least the following Q/A:
    (a) "What payment methods are accepted?" — the answer MUST be exactly: "We accept the following payment methods: Visa, MasterCard, Stripe, and PayPal." Do NOT add hedges, alternative phrasings, additional methods, or extra sentences before/after this line — output it verbatim so it matches the Payment Method page exactly.
    At least one additional Payments Q/A MUST confirm USD billing and encrypted/HTTPS checkout and close by pointing to the Privacy Policy for how data is handled.
-5. Security & Privacy — a short Q/A confirming the checkout uses industry-standard encryption (TLS/HTTPS) and that personal data is handled per the Privacy Policy (GDPR and CCPA rights included), with a Cookie Policy pointer for tracking questions.
+5. Security & Privacy — a short Q/A confirming the checkout uses industry-standard encryption (TLS/HTTPS) and that personal data is handled per the Privacy Policy (GDPR and CCPA rights covered). Close with a pointer to the Privacy Policy ONLY. Do NOT mention cookies, tracking pixels, cookie banner, cookie preferences, or any Cookie Policy page anywhere in the answer (some clones don't have that page, and the topic is out of scope for FAQ regardless).
 6. Account — creating an account, password reset, optional guest checkout if the source mentions it.
 7. Products — sizing, materials, availability, care (industry-appropriate for {{nganh_hang}}). Keep answers generic; do NOT invent SKUs, specific dimensions, or brand names.
 8. Support — how to reach the team, business hours, expected response time. Use {{email_web}}, {{so_dien_thoai}}, and {{gio_lam_viec}} (preserving any timezone abbreviation already inside that value, e.g. "(MST)") with the response time of {{response_time}}.
 
 QUESTION STYLE
 - Each Question: short, natural, in the shopper's voice (e.g., "How long does shipping take?").
-- Each Answer: 1 to 4 sentences, direct and factual. When the full answer lives on a policy page, the answer MUST end with a pointer such as "See our Shipping Policy for full timelines." / "See our Return & Refund Policy for full terms." / "See our Cancellation Policy for full terms." / "See our Privacy Policy and Cookie Policy for details."
+- Each Answer: 1 to 4 sentences, direct and factual. When the full answer lives on a policy page, the answer MUST end with a pointer such as "See our Shipping Policy for full timelines." / "See our Return & Refund Policy for full terms." / "See our Cancellation Policy for full terms." / "See our Privacy Policy for details." Do NOT pair the Privacy Policy pointer with a Cookie Policy pointer (see COOKIE SCOPE rule below).
 - Use {{email_web}} and {{so_dien_thoai}} when pointing to support.
 - Keep the overall tone neutral and informational — FAQ is a trust/compliance page, not a sales page.
 
@@ -113,7 +113,8 @@ STRICT RULES (GMC compliance)
 - Use {{ten_web}} for the store name — never the source page's store name, which belongs to a different business.
 - For legal-commitment Q/As (refund, return liability, lost packages, who pays return shipping), name {{ten_doanh_nghiep}} as the responsible party.
 - If the source page contains any email, phone, address, or store-name literals, DO NOT copy them; substitute the COMPANY CONTEXT values above.
-- For any question whose full answer is a policy (shipping / returns & refunds / cancellation / privacy / cookie), keep the FAQ answer consistent with the GMC STANDARDS SNAPSHOT and always close with a pointer to the relevant policy page by its correct name.
+- For any question whose full answer is a policy (shipping / returns & refunds / cancellation / privacy), keep the FAQ answer consistent with the GMC STANDARDS SNAPSHOT and always close with a pointer to the relevant policy page by its correct name.
+- COOKIE SCOPE (AUTHORITATIVE): the FAQ MUST NOT mention cookies, tracking cookies, cookie banner, cookie preferences, cookie consent, or link to a Cookie Policy page anywhere. Not all clones generate a Cookie Policy page, and the topic is out of FAQ scope regardless — privacy-adjacent questions are answered with a single pointer to the Privacy Policy. This applies to every category, including Security & Privacy.
 - Clear, professional English. Rewrite wording; do not copy sentences verbatim from the source.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below is either the page header or one side of a Q/A pair — do NOT swap content across slots)

@@ -8,19 +8,16 @@
  *   [2] Intent.4Cards      — 4 mood-labeled cards as primary navigation
  *   [3] BrandStory.2col    — image-right
  *   [4] Featured Products
- *   [5] Testimonials.Quote-Single — ONE oversized hero quote (not grid)
- *   [6] CTA.Flat
+ *   [5] CTA.Flat
  *
  * Distinct from L1/L2/L3 because: hero is centered text-only on bg image,
- * 4-card mood navigator dominates above-the-fold, testimonials is a single
- * oversized quote (high-impact / less crowded).
+ * 4-card mood navigator dominates above-the-fold.
  *
  * CSS classes:
  *   .nt-l4-hero (uses bg image via CSS) / .nt-l4-h1 / .nt-l4-lead / .nt-l4-cta-row
  *   .nt-l4-intent / .nt-l4-intent-card / .nt-l4-intent-label
  *   .nt-l4-story / .nt-l4-story-media / .nt-l4-h2 / .nt-l4-bullets
  *   .nt-l4-featured
- *   .nt-l4-quote-section / .nt-l4-quote-large / .nt-l4-quote-author
  *   .nt-l4-cta / .nt-l4-cta-headline / .nt-l4-cta-para
  */
 
@@ -30,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L4',
-    'name' => 'Intent-Cards Navigator — Hero.Center / Intent.4Cards / BrandStory / Featured / Quote.Single / CTA.Flat',
+    'name' => 'Intent-Cards Navigator — Hero.Center / Intent.4Cards / BrandStory / Featured / CTA.Flat',
 
     'image_budget' => <<<'TXT'
 * {{IMG_INTENT_1_URL}}  — square 1/1 OR 4/5 portrait. Mood / lifestyle for {NICHE} card 1.
@@ -68,9 +65,6 @@ TXT,
                           Allowed: "Featured Products", "Studio Favorites", "This Season's Edit",
                           "Customer Favorites", "New Arrivals", "The Edit", "Studio Picks", "Browse the Range".
                           FORBIDDEN: brand names, fabricated collection names, descriptive product nouns.
-
-* {{QUOTE_LARGE}}       — 25-40 words. Single hero quote — strongest customer voice.
-* {{QUOTE_AUTHOR}}      — first name + city/country only.
 
 * {{CTA_HEADLINE}}      — 5-9 words.
 * {{CTA_PARA}}          — 12-20 words.
@@ -133,15 +127,6 @@ TXT,
 [/col]
 [/row]
 [ux_products type="row" products="8" columns="4" columns__md="3" columns__sm="2" orderby="popularity"]
-[/section]
-
-[section label="L4 Quote" padding="60px" padding__sm="32px" class="cmc-section nt-l4-quote-section"]
-[row]
-[col span="12" span__sm="12" offset="1" offset__sm="0" align="center"]
-<blockquote class="nt-l4-quote-large">"{{QUOTE_LARGE}}"</blockquote>
-<span class="nt-l4-quote-author">— {{QUOTE_AUTHOR}}</span>
-[/col]
-[/row]
 [/section]
 
 [section label="L4 CTA" padding="60px" padding__sm="32px" class="cmc-section nt-l4-cta"]

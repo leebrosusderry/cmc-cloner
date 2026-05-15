@@ -1,27 +1,22 @@
 <?php
 /**
- * Homepage Skeleton L7 — Mosaic Mid + Quote Stack
+ * Homepage Skeleton L7 — Mosaic Mid
  *
  * Visual rhythm:
  *   [1] Hero.Split          — 6/6, headline + 2 CTA / image
  *   [2] BrandStory.2col     — image-LEFT, text-right (mirror of L1's order)
  *   [3] MoodMosaic.5tiles   — mosaic in the middle of the page
  *   [4] Featured Products
- *   [5] Testimonials.Stack  — 3 quotes stacked VERTICALLY (not grid),
- *                              each separated by hairline rule, alternating
- *                              left/right alignment for editorial rhythm
- *   [6] CTA.Flat
+ *   [5] CTA.Flat
  *
  * Distinct from L1-L6 because: BrandStory image-left, mosaic in mid-page
- * (not above featured), testimonials are a vertical stack with alternating
- * alignment (more "review feed" feel than "review grid").
+ * (not above featured).
  *
  * CSS classes:
  *   .nt-l7-hero / .nt-l7-hero-media / .nt-l7-h1 / .nt-l7-lead / .nt-l7-cta-row
  *   .nt-l7-story / .nt-l7-story-media / .nt-l7-h2 / .nt-l7-bullets
  *   .nt-l7-mosaic-section / .nt-l7-mosaic
  *   .nt-l7-featured
- *   .nt-l7-test-stack / .nt-l7-test-row / .nt-l7-test-row.is-alt / .nt-l7-quote / .nt-l7-author
  *   .nt-l7-cta / .nt-l7-cta-headline / .nt-l7-cta-para
  */
 
@@ -31,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L7',
-    'name' => 'Mosaic Mid + Quote Stack — Hero.Split / BrandStory (img-left) / MoodMosaic / Featured / Testimonials.Stack / CTA.Flat',
+    'name' => 'Mosaic Mid — Hero.Split / BrandStory (img-left) / MoodMosaic / Featured / CTA.Flat',
 
     'image_budget' => <<<'TXT'
 * {{IMG_HERO_URL}}      — landscape 16/9 OR portrait 3/4. Mood-driven for {NICHE}.
@@ -76,13 +71,6 @@ TXT,
                           "Customer Favorites", "New Arrivals", "The Edit", "Studio Picks", "Browse the Range".
                           FORBIDDEN: brand names, fabricated collection names, descriptive product nouns.
 
-* {{TEST_HEADING}}      — 4-6 words.
-* {{TEST_QUOTE_1}}      — 25-40 words. Slightly longer than grid format — stack benefits from depth.
-* {{TEST_AUTHOR_1}}     — first name + city/country.
-* {{TEST_QUOTE_2}}      — 25-40 words.
-* {{TEST_AUTHOR_2}}     — same rule.
-* {{TEST_QUOTE_3}}      — 25-40 words.
-* {{TEST_AUTHOR_3}}     — same rule.
 
 * {{CTA_HEADLINE}}      — 5-9 words.
 * {{CTA_PARA}}          — 12-20 words.
@@ -147,19 +135,6 @@ TXT,
 [/col]
 [/row]
 [ux_products type="row" products="8" columns="4" columns__md="3" columns__sm="2" orderby="popularity"]
-[/section]
-
-[section label="L7 Testimonials Stack" padding="60px" padding__sm="32px" class="cmc-section nt-l7-testimonials"]
-[row]
-[col span="12" span__sm="12" offset="1" offset__sm="0"]
-<div class="nt-feat-heading"><h2 class="nt-l7-h2">{{TEST_HEADING}}</h2></div>
-<div class="nt-l7-test-stack">
-<div class="nt-l7-test-row"><blockquote class="nt-l7-quote">"{{TEST_QUOTE_1}}"</blockquote><span class="nt-l7-author">— {{TEST_AUTHOR_1}}</span></div>
-<div class="nt-l7-test-row is-alt"><blockquote class="nt-l7-quote">"{{TEST_QUOTE_2}}"</blockquote><span class="nt-l7-author">— {{TEST_AUTHOR_2}}</span></div>
-<div class="nt-l7-test-row"><blockquote class="nt-l7-quote">"{{TEST_QUOTE_3}}"</blockquote><span class="nt-l7-author">— {{TEST_AUTHOR_3}}</span></div>
-</div>
-[/col]
-[/row]
 [/section]
 
 [section label="L7 CTA" padding="60px" padding__sm="32px" class="cmc-section nt-l7-cta"]

@@ -22,6 +22,7 @@
         initReviewSeeder();
         initRunAll();
         initPodSetupButton();
+        initRevertSubcatsButton();
         initCopyButtons();
         initComboboxes();
         initHomepagePrompt();
@@ -2853,8 +2854,8 @@
         }
 
         function selectedSteps() {
-            // Preserve the timeline order (cat → title → sku → varnorm → review → image → regen → guidheal → sizeguide)
-            var order = ['cat', 'title', 'sku', 'varnorm', 'review', 'image', 'regen', 'guidheal', 'sizeguide'];
+            // Preserve the timeline order (cat → title → sku → varnorm → review → image → regen → guidheal → subcats → sizeguide)
+            var order = ['cat', 'title', 'sku', 'varnorm', 'review', 'image', 'regen', 'guidheal', 'subcats', 'sizeguide'];
             return order.filter(function (id) {
                 return $checkboxes.filter('[value="' + id + '"]:checked').length > 0;
             });
@@ -2962,6 +2963,7 @@
                 image:     'Product Image Rename',
                 regen:     'Regenerate Image Thumbnails',
                 guidheal:  'Heal Stale Attachment GUIDs',
+                subcats:   'Build Sub-Categories',
                 sizeguide: 'Sync Size Guide Page'
             })[stepId] || stepId;
         }
@@ -2975,6 +2977,7 @@
             if (stepId === 'image')     { return runImageRename(stepId); }
             if (stepId === 'regen')     { return runImageRegen(stepId); }
             if (stepId === 'guidheal')  { return runHealGuids(stepId); }
+            if (stepId === 'subcats')   { return runBuildSubcats(stepId); }
             if (stepId === 'sizeguide') { return runSizeGuide(stepId); }
             return Promise.resolve({ success: false, summary: 'unknown step' });
         }
@@ -3489,7 +3492,63 @@
             });
         }
 
-        /* ---- Step 9: Ensure Size Guide Page ----
+        /* ---- Step 9: Build Sub-Categories ----
+         * Single AJAX call. Server handles: AI plan generation (or cache
+         * lookup) → wp_insert_term for each sub-cat under the parent →
+         * walk products + score titles + multi-cat assign → prune empty
+         * sub-cats AI suggested but no products matched. Idempotent. */
+        function runBuildSubcats(stepId) {
+            return new Promise(function (resolve) {
+                var action = CMCCloner.actions && CMCCloner.actions.runAllBuildSubcats;
+                if (!action) {
+                    resolve({ success: false, summary: 'runAllBuildSubcats action missing — reload the page' });
+                    return;
+                }
+                setStepLog(stepId, 'generating sub-cat plan + distributing products…');
+                $.ajax({
+                    url:     CMCCloner.ajaxUrl,
+                    type:    'POST',
+                    timeout: 180000,
+                    data: {
+                        action: action,
+                        nonce:  CMCCloner.nonce
+                    }
+                })
+                .done(function (res) {
+                    if (!res || !res.success) {
+                        var em = (res && res.data && res.data.message) || 'failed';
+                        resolve({ success: false, summary: em });
+                        return;
+                    }
+                    var d = res.data || {};
+                    var summary = (d.created | 0) + ' sub-cat(s) created'
+                                + ((d.pruned_empty | 0) > 0 ? ' (' + (d.pruned_empty | 0) + ' empty pruned)' : '')
+                                + ' · ' + (d.distributed | 0) + ' product(s) distributed'
+                                + ((d.unmatched | 0) > 0 ? ' (' + (d.unmatched | 0) + ' unmatched left in parent)' : '');
+                    resolve({ success: true, summary: summary });
+                })
+                .fail(function (xhr, status) {
+                    if (status === 'timeout') {
+                        resolve({ success: false, summary: 'AI call timed out' });
+                        return;
+                    }
+                    // Surface the server-side error message when present
+                    // (HTTP 500 with wp_send_json_error payload) instead
+                    // of the generic "network error" — categorisation
+                    // errors are almost always AI / JSON parse issues
+                    // that the operator needs to see.
+                    var msg = 'network error';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                        msg = xhr.responseJSON.data.message;
+                    } else if (xhr && xhr.status) {
+                        msg = 'HTTP ' + xhr.status;
+                    }
+                    resolve({ success: false, summary: msg });
+                });
+            });
+        }
+
+        /* ---- Step 10: Ensure Size Guide Page ----
          * Single AJAX call. Server handles: industry gate → create empty
          * page if missing → build prompt → AI → save (which triggers the
          * cmc_cloner_page_updated action that auto-attaches the page to
@@ -3648,6 +3707,61 @@
                 });
             });
         }
+    }
+
+    /* ----------------------- Revert Sub-Categories button (Site Setup → Run All footer) -----------------------
+     * Standalone button that undoes the "Build Sub-Categories" Run-All
+     * step: restores each product's pre-distribution `product_cat`
+     * list from postmeta backup, deletes plugin-created sub-cat terms.
+     *
+     * Confirm prompt is intentionally noisy — re-running the build step
+     * after a revert means another AI call, so users should pause before
+     * confirming. */
+    function initRevertSubcatsButton() {
+        var $btn = $('.cmc-btn-revert-subcats');
+        if (!$btn.length || typeof CMCCloner === 'undefined') { return; }
+
+        var $status = $('.cmc-revert-subcats-status');
+        function setStatus(text, cls) {
+            $status.removeClass('is-ok is-error is-running').text(text || '');
+            if (cls) { $status.addClass(cls); }
+        }
+
+        $btn.on('click', function () {
+            var action = CMCCloner.actions && CMCCloner.actions.revertSubcats;
+            if (!action) { setStatus('revertSubcats action missing — reload the page', 'is-error'); return; }
+            if (!window.confirm('Revert all sub-categories?\n\nThis restores every reassigned product to its pre-distribution product_cat list and deletes plugin-created sub-cat terms. The cached AI plan will also be cleared, so re-running "Build Sub-Categories" will call AI again.')) {
+                return;
+            }
+            $btn.prop('disabled', true);
+            setStatus('Reverting…', 'is-running');
+            $.ajax({
+                url:     CMCCloner.ajaxUrl,
+                type:    'POST',
+                timeout: 120000,
+                data: {
+                    action: action,
+                    nonce:  CMCCloner.nonce
+                }
+            })
+            .done(function (res) {
+                if (!res || !res.success) {
+                    setStatus('Revert failed: ' + ((res && res.data && res.data.message) || 'unknown'), 'is-error');
+                    $btn.prop('disabled', false);
+                    return;
+                }
+                var d = res.data || {};
+                setStatus(
+                    'Restored ' + (d.restored | 0) + ' product(s); deleted ' + (d.deleted | 0) + ' auto sub-cat(s).',
+                    'is-ok'
+                );
+                $btn.prop('disabled', false);
+            })
+            .fail(function (xhr, status) {
+                setStatus(status === 'timeout' ? 'Timed out — try again' : 'Network error', 'is-error');
+                $btn.prop('disabled', false);
+            });
+        });
     }
 
 })(jQuery);

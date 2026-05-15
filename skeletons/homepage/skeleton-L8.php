@@ -8,12 +8,11 @@
  *   [3] BrandStory.2col     — image-right
  *   [4] Intent.4Cards       — 4 mood-labeled cards
  *   [5] Featured Products
- *   [6] Testimonials.Grid3
- *   [7] CTA.Split           — image + text-on-color
+ *   [6] CTA.Split           — image + text-on-color
  *
- * Distinct from L1-L7 because: 7 sections (largest layout), has BOTH the
- * value strip AND intent cards — designed for brands with multiple
- * trust signals to communicate (craft, materials, ethos, range).
+ * Distinct from L1-L7 because: 6 sections, has BOTH the value strip AND
+ * intent cards — designed for brands with multiple trust signals to
+ * communicate (craft, materials, ethos, range).
  *
  * NOTE on ValueStrip: uses pure CSS glyphs (Unicode shapes) baked into
  * skeleton — no SVG/icon system. The class names will be styled via
@@ -25,7 +24,6 @@
  *   .nt-l8-story / .nt-l8-story-media / .nt-l8-h2 / .nt-l8-bullets
  *   .nt-l8-intent / .nt-l8-intent-card / .nt-l8-intent-label
  *   .nt-l8-featured
- *   .nt-l8-testimonials / .nt-l8-testimonial-card
  *   .nt-l8-cta / .nt-l8-cta-media / .nt-l8-cta-headline / .nt-l8-cta-para
  */
 
@@ -35,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L8',
-    'name' => 'Editorial Plus — Hero / ValueStrip / BrandStory / Intent / Featured / Testimonials / CTA.Split (7 sections)',
+    'name' => 'Editorial Plus — Hero / ValueStrip / BrandStory / Intent / Featured / CTA.Split (6 sections)',
 
     'image_budget' => <<<'TXT'
 * {{IMG_HERO_URL}}      — landscape 16/9 OR portrait 3/4. Mood-driven for {NICHE}.
@@ -86,13 +84,6 @@ TXT,
                           "Customer Favorites", "New Arrivals", "The Edit", "Studio Picks", "Browse the Range".
                           FORBIDDEN: brand names, fabricated collection names, descriptive product nouns.
 
-* {{TEST_HEADING}}      — 4-6 words.
-* {{TEST_QUOTE_1}}      — 18-28 words.
-* {{TEST_AUTHOR_1}}     — first name + city/country.
-* {{TEST_QUOTE_2}}      — 18-28 words.
-* {{TEST_AUTHOR_2}}     — same.
-* {{TEST_QUOTE_3}}      — 18-28 words.
-* {{TEST_AUTHOR_3}}     — same.
 
 * {{CTA_HEADLINE}}      — 5-9 words.
 * {{CTA_PARA}}          — 12-20 words.
@@ -177,34 +168,6 @@ TXT,
 [/col]
 [/row]
 [ux_products type="row" products="8" columns="4" columns__md="3" columns__sm="2" orderby="popularity"]
-[/section]
-
-[section label="L8 Testimonials" padding="48px" padding__sm="28px" class="cmc-section nt-l8-testimonials"]
-[row]
-[col span="12"]
-<div class="text-center"><h2 class="nt-l8-h2">{{TEST_HEADING}}</h2></div>
-[/col]
-[/row]
-[row]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l8-testimonial-card">
-<p class="nt-l8-quote">"{{TEST_QUOTE_1}}"</p>
-<span class="nt-l8-author">— {{TEST_AUTHOR_1}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l8-testimonial-card">
-<p class="nt-l8-quote">"{{TEST_QUOTE_2}}"</p>
-<span class="nt-l8-author">— {{TEST_AUTHOR_2}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l8-testimonial-card">
-<p class="nt-l8-quote">"{{TEST_QUOTE_3}}"</p>
-<span class="nt-l8-author">— {{TEST_AUTHOR_3}}</span>
-</div>
-[/col]
-[/row]
 [/section]
 
 [section label="L8 CTA" padding="60px" padding__sm="32px" class="cmc-section nt-l8-cta"]

@@ -51,6 +51,7 @@ final class CMC_Plugin {
         require_once $base . 'class-title-rewriter.php';
         require_once $base . 'class-review-seeder.php';
         require_once $base . 'class-pages-controller.php';
+        require_once $base . 'class-category-builder.php';
         require_once $base . 'class-size-guide.php';
         require_once $base . 'class-setup-controller.php';
         require_once $base . 'class-ajax.php';

@@ -151,6 +151,7 @@ $size_guide_visible = $size_guide_applies || $size_guide_page_exists;
                             <li><strong>Product Image Rename</strong> — filenames derive from the rewritten titles; uses the first (now-only) category.</li>
                             <li><strong>Regenerate Image Thumbnails</strong> — brute-force rebuilds metadata + size variants for every product image (same engine as the &quot;Repair image metadata&quot; button), so freshly renamed files have working srcsets.</li>
                             <li><strong>Heal Stale Attachment GUIDs</strong> — patches the <code>wp_posts.guid</code> column for every renamed attachment so plugins that override <code>wp_get_attachment_url</code> with <code>$post-&gt;guid</code> (FIFU / show-link-image) stop returning the pre-rename filename. Without this, CTX Feed / GMC keep emitting the old Amazon filenames even after rename succeeds.</li>
+                            <li><strong>Build Sub-Categories</strong> — one AI call proposes 5–8 GMC-friendly sub-categories under the current niche category, then plugin distributes products into them by title-keyword matching (multi-cat allowed when a product fits more than one). Reviewers flag stores that show only a single broad category; this splits the catalog so the storefront looks browsable. Empty sub-cats AI proposed but no products matched are auto-pruned. Revertible: every reassigned product gets its prior <code>product_cat</code> list backed up in <code>_cmc_orig_cats</code>; plugin-created sub-cats carry <code>_cmc_auto_created_subcat=1</code>. The Revert button below the Run-All block undoes the step cleanly.</li>
                             <li><strong>Ensure Size Guide Page</strong> — runs only when the configured industry matches apparel-adjacent niches (fashion / apparel / footwear / kids / maternity / …). Creates an empty <code>size-guide</code> page if missing, runs the AI to fill the standard size chart wrapper, then auto-attaches the page link to the Flatsome footer block. Re-runs always overwrite the previous content. <strong>Bidirectional cleanup</strong>: cloning to a non-apparel niche on the next pass demotes the page to draft and strips the footer link — zero manual work.</li>
                         </ol>
                         <p><strong>Resume support</strong>: closing the tab mid-run halts the loop, but every step that did run leaves its postmeta markers (<code>_cmc_title_rewritten_at</code>, etc.) so clicking Run All again skips the already-finished products and picks up where you left off.</p>
@@ -169,6 +170,7 @@ $size_guide_visible = $size_guide_applies || $size_guide_page_exists;
                             <label><input type="checkbox" class="cmc-run-all-step" value="image"  checked> Product Image Rename <span class="cmc-run-all__meta">(~3 min)</span></label>
                             <label><input type="checkbox" class="cmc-run-all-step" value="regen"  checked> Regenerate Image Thumbnails <span class="cmc-run-all__meta">(~2 min)</span></label>
                             <label><input type="checkbox" class="cmc-run-all-step" value="guidheal" checked> Heal Stale Attachment GUIDs <span class="cmc-run-all__meta">(fixes CTX Feed / GMC URLs)</span></label>
+                            <label><input type="checkbox" class="cmc-run-all-step" value="subcats"> Build Sub-Categories <span class="cmc-run-all__meta">(AI proposes 5-8 sub-cats + distributes products — opt-in)</span></label>
                             <?php if ( $size_guide_visible ) : ?>
                             <label><input type="checkbox" class="cmc-run-all-step" value="sizeguide" checked> Sync Size Guide Page <span class="cmc-run-all__meta">(auto-create on apparel niches, auto-cleanup otherwise)</span></label>
                             <?php endif; ?>
@@ -196,10 +198,19 @@ $size_guide_visible = $size_guide_applies || $size_guide_page_exists;
                             <li data-step="image"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Product Image Rename</span><span class="cmc-run-all-log"></span></li>
                             <li data-step="regen"  class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Regenerate Image Thumbnails</span><span class="cmc-run-all-log"></span></li>
                             <li data-step="guidheal" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Heal Stale Attachment GUIDs</span><span class="cmc-run-all-log"></span></li>
+                            <li data-step="subcats" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Build Sub-Categories</span><span class="cmc-run-all-log"></span></li>
                             <?php if ( $size_guide_visible ) : ?>
                             <li data-step="sizeguide" class="is-pending"><span class="cmc-run-all-icon">⭕</span><span class="cmc-run-all-name">Sync Size Guide Page</span><span class="cmc-run-all-log"></span></li>
                             <?php endif; ?>
                         </ol>
+
+                        <div class="cmc-setup-row cmc-subcats-revert-row">
+                            <button type="button" class="button button-link-delete cmc-btn-revert-subcats">Revert Sub-Categories</button>
+                            <span class="cmc-setup-meta cmc-revert-subcats-status" aria-live="polite"></span>
+                            <p class="description" style="margin:6px 0 0;">
+                                <small>Undoes the "Build Sub-Categories" step: restores each product's pre-distribution <code>product_cat</code> list from postmeta backup, then deletes only plugin-created sub-cat terms. Safe to re-run — idempotent.</small>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

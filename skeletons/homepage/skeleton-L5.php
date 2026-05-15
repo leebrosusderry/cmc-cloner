@@ -9,19 +9,17 @@
  *   [4] Process.5Steps     — 5 numbered horizontal steps showing the process
  *                              (this is the L5 signature section, not in any
  *                               other skeleton)
- *   [5] Testimonials.Grid3
- *   [6] CTA.Split
+ *   [5] CTA.Split
  *
- * Distinct from L1-L4 because: 7 sections (largest layout), unique numbered
- * Process strip showing craft narrative — designed for brands that want to
- * emphasize HOW things are made, not just WHAT.
+ * Distinct from L1-L4 because: unique numbered Process strip showing craft
+ * narrative — designed for brands that want to emphasize HOW things are
+ * made, not just WHAT.
  *
  * CSS classes:
  *   .nt-l5-hero (dark) / .nt-l5-hero-media / .nt-l5-h1 / .nt-l5-lead
  *   .nt-l5-story / .nt-l5-story-media / .nt-l5-h2
  *   .nt-l5-featured
  *   .nt-l5-process / .nt-l5-step-grid / .nt-l5-step / .nt-l5-step-num / .nt-l5-step-label
- *   .nt-l5-testimonials / .nt-l5-testimonial-card
  *   .nt-l5-cta / .nt-l5-cta-media / .nt-l5-cta-headline / .nt-l5-cta-para
  */
 
@@ -31,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L5',
-    'name' => 'Magazine Stack — Hero.FullBleed / BrandStory / Featured / Process.5Steps / Testimonials / CTA.Split',
+    'name' => 'Magazine Stack — Hero.FullBleed / BrandStory / Featured / Process.5Steps / CTA.Split',
 
     'image_budget' => <<<'TXT'
 * {{IMG_HERO_URL}}      — landscape 16/9 OR portrait 3/4. Mood-driven for {NICHE} on a darker / moodier surface.
@@ -70,13 +68,6 @@ TXT,
 * {{STEP_5_LABEL}}      — 2-4 words.
 * {{STEP_5_DESC}}       — 8-14 words.
 
-* {{TEST_HEADING}}      — 4-6 words.
-* {{TEST_QUOTE_1}}      — 18-28 words.
-* {{TEST_AUTHOR_1}}     — first name + city/country.
-* {{TEST_QUOTE_2}}      — 18-28 words.
-* {{TEST_AUTHOR_2}}     — same.
-* {{TEST_QUOTE_3}}      — 18-28 words.
-* {{TEST_AUTHOR_3}}     — same.
 
 * {{CTA_HEADLINE}}      — 5-9 words.
 * {{CTA_PARA}}          — 12-20 words.
@@ -145,34 +136,6 @@ TXT,
 <div class="nt-l5-step"><span class="nt-l5-step-num">03</span><h3 class="nt-l5-step-label">{{STEP_3_LABEL}}</h3><p class="nt-l5-step-desc">{{STEP_3_DESC}}</p></div>
 <div class="nt-l5-step"><span class="nt-l5-step-num">04</span><h3 class="nt-l5-step-label">{{STEP_4_LABEL}}</h3><p class="nt-l5-step-desc">{{STEP_4_DESC}}</p></div>
 <div class="nt-l5-step"><span class="nt-l5-step-num">05</span><h3 class="nt-l5-step-label">{{STEP_5_LABEL}}</h3><p class="nt-l5-step-desc">{{STEP_5_DESC}}</p></div>
-</div>
-[/col]
-[/row]
-[/section]
-
-[section label="L5 Testimonials" padding="48px" padding__sm="28px" class="cmc-section nt-l5-testimonials"]
-[row]
-[col span="12"]
-<div class="nt-feat-heading"><h2 class="nt-l5-h2">{{TEST_HEADING}}</h2></div>
-[/col]
-[/row]
-[row]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l5-testimonial-card">
-<p class="nt-l5-quote">"{{TEST_QUOTE_1}}"</p>
-<span class="nt-l5-author">— {{TEST_AUTHOR_1}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l5-testimonial-card">
-<p class="nt-l5-quote">"{{TEST_QUOTE_2}}"</p>
-<span class="nt-l5-author">— {{TEST_AUTHOR_2}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l5-testimonial-card">
-<p class="nt-l5-quote">"{{TEST_QUOTE_3}}"</p>
-<span class="nt-l5-author">— {{TEST_AUTHOR_3}}</span>
 </div>
 [/col]
 [/row]

@@ -7,8 +7,7 @@
  *                            — kicker + H1 + lead + 2 CTAs
  *   [2] Featured Products — products promoted EARLY (story sets context)
  *   [3] StudioStory.Split — image-left / text-right narrative section
- *   [4] Testimonials.Grid3
- *   [5] CTA.Split         — image + text-on-color band
+ *   [4] CTA.Split         — image + text-on-color band
  *
  * Distinct from L1/L2 because: H1 is text-only (no hero image), products
  * appear in slot [2] (not [3]), studio story comes AFTER products as
@@ -18,7 +17,6 @@
  *   .nt-l3-intro / .nt-l3-h1 / .nt-l3-lead / .nt-l3-cta-row
  *   .nt-l3-featured
  *   .nt-l3-studio / .nt-l3-studio-media / .nt-l3-h2
- *   .nt-l3-testimonials / .nt-l3-testimonial-card
  *   .nt-l3-cta / .nt-l3-cta-media / .nt-l3-cta-headline / .nt-l3-cta-para
  */
 
@@ -28,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L3',
-    'name' => 'Story-First Editorial — BrandStory.Wide / Featured / StudioStory.Split / Testimonials / CTA.Split',
+    'name' => 'Story-First Editorial — BrandStory.Wide / Featured / StudioStory.Split / CTA.Split',
 
     'image_budget' => <<<'TXT'
 * {{IMG_STUDIO_URL}}    — landscape 4/3, atelier / process shot showing craft for {NICHE}. No faces close up, no logos.
@@ -55,14 +53,6 @@ TXT,
                           Allowed: "Featured Products", "Studio Favorites", "This Season's Edit",
                           "Customer Favorites", "New Arrivals", "The Edit", "Studio Picks", "Browse the Range".
                           FORBIDDEN: brand names, fabricated collection names, descriptive product nouns.
-
-* {{TEST_HEADING}}      — 4-6 words.
-* {{TEST_QUOTE_1}}      — 18-28 words.
-* {{TEST_AUTHOR_1}}     — first name + city/country.
-* {{TEST_QUOTE_2}}      — 18-28 words.
-* {{TEST_AUTHOR_2}}     — same rule.
-* {{TEST_QUOTE_3}}      — 18-28 words.
-* {{TEST_AUTHOR_3}}     — same rule.
 
 * {{CTA_HEADLINE}}      — 5-9 words.
 * {{CTA_PARA}}          — 12-20 words.
@@ -110,34 +100,6 @@ TXT,
 </ul>
 [/col]
 
-[/row]
-[/section]
-
-[section label="L3 Testimonials" padding="48px" padding__sm="28px" class="cmc-section nt-l3-testimonials"]
-[row]
-[col span="12"]
-<div class="nt-feat-heading"><h2 class="nt-l3-h2">{{TEST_HEADING}}</h2></div>
-[/col]
-[/row]
-[row]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l3-testimonial-card">
-<p class="nt-l3-quote">"{{TEST_QUOTE_1}}"</p>
-<span class="nt-l3-author">— {{TEST_AUTHOR_1}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l3-testimonial-card">
-<p class="nt-l3-quote">"{{TEST_QUOTE_2}}"</p>
-<span class="nt-l3-author">— {{TEST_AUTHOR_2}}</span>
-</div>
-[/col]
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l3-testimonial-card">
-<p class="nt-l3-quote">"{{TEST_QUOTE_3}}"</p>
-<span class="nt-l3-author">— {{TEST_AUTHOR_3}}</span>
-</div>
-[/col]
 [/row]
 [/section]
 

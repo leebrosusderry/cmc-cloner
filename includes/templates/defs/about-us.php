@@ -25,6 +25,26 @@ COMPANY CONTEXT (use these literal values naturally in the copy — do not inven
 
 {{INDUSTRY_LOCK}}
 
+CONCRETE IDENTITY POLICY (AUTHORITATIVE — kills the "generic boilerplate About Us" complaint reviewers flag most often)
+
+The FIRST sentence of the {{INTRO}} slot is a CONCRETE IDENTITY STATEMENT. It MUST name all three of {{ten_web}}, {{nganh_hang}}, and {{ten_doanh_nghiep}} within the first 15–20 words. Reviewers read this sentence to confirm "who is this site, what do they sell, what legal entity runs it?" — a generic mission-y opener fails that check immediately.
+
+Pick ONE shape below for each render. Light paraphrase is allowed across cloned sites (so two sites don't open identically), but you may NEVER drop or rename any of the three slots, and you may NEVER append a list of products or a slogan to the identity sentence itself:
+  • "{{ten_web}} is an online {{nganh_hang}} store operated by {{ten_doanh_nghiep}}."
+  • "{{ten_web}} is the online {{nganh_hang}} shop run by {{ten_doanh_nghiep}}."
+  • "Operated by {{ten_doanh_nghiep}}, {{ten_web}} is an online {{nganh_hang}} store."
+  • "{{ten_web}} is a {{nganh_hang}} store online, operated by {{ten_doanh_nghiep}}."
+
+The optional second sentence of {{INTRO}} carries a short brand-promise line ("We focus on …", "Our team curates …", etc.) — that sentence is free-form, but MUST NOT replace or precede the identity sentence above.
+
+BANNED openers (these are exactly what reviewers flag as "too generic"):
+  - "Welcome to {{ten_web}}."
+  - "At {{ten_web}}, we believe …"
+  - "Our mission is to …"
+  - Any opener that delays naming {{nganh_hang}} or {{ten_doanh_nghiep}} past sentence 1.
+
+This rule applies ONLY to {{INTRO}}. The other sections (Story, Mission, Offerings, Commitment, Values, CTA) keep their own rules.
+
 FOUNDING + NEWNESS POLICY (AUTHORITATIVE — GMC and many reviewers expect a "Founded in <year>" line as a trust signal, so the page MUST always carry one; while still clearly signalling that {{ten_web}} is a newly launched business — never claim age, never claim duration, never copy a year from the SOURCE PAGE)
 
 The placeholder {{founding_year}} is GUARANTEED to resolve to a valid 4-digit year on every render: it is either the year the user configured in Settings → Branding → Founding year, OR an auto-fallback computed by the plugin (today minus a random 2–6 month offset). It is NEVER empty. Use {{founding_year}} verbatim — exactly once, inside the Our Story section.
@@ -228,7 +248,7 @@ STRICT RULES
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
 - {{HEADING}} — page H1. 3–8 words, no full sentence, no trailing period.
-- {{INTRO}} — 1–2 sentences framing the page and the store. Plain text or a single <p>.
+- {{INTRO}} — 1–2 sentences framing the page and the store. The FIRST sentence MUST be the concrete identity statement defined in CONCRETE IDENTITY POLICY above — it names ALL THREE of {{ten_web}}, {{nganh_hang}}, and {{ten_doanh_nghiep}} within the first 15–20 words, using one of the approved shapes (no banned openers like "Welcome to …" / "At {{ten_web}} we believe …" / "Our mission is …"). The optional second sentence is a short brand-promise line. Plain text or a single <p>.
 - {{STORY}} — section 2 body (Our Story). One short paragraph that positions {{ten_web}} as newly launched / in its early days. MUST contain exactly one founding sentence per the FOUNDING + NEWNESS POLICY above: "Founded in {{founding_year}}, {{ten_web}} is a newly launched [shop / studio / brand], still in our early days." (or one of the approved variations). {{founding_year}} is always populated by the plugin — never omit the founding sentence. Never write a year other than {{founding_year}}, never write a month or day, do not invent founder names or cities.
 - {{MISSION}} — section 1 body (Mission / Brand Promise). One short paragraph stating what the store stands for.
 - {{OFFERINGS}} — section 3 body (What We Offer). This is the GMC reviewer's primary anchor for "what does this store sell?" and the section that MUST read as written for THIS industry specifically. Follow the REQUIRED PARAGRAPH SHAPE for "What We Offer" above STRICTLY:

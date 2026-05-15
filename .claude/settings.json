@@ -94,7 +94,8 @@
       "Bash(/Applications/XAMPP/xamppfiles/bin/php -l /Applications/XAMPP/xamppfiles/htdocs/cmc-plugin/wp-content/plugins/cmc-cloner/includes/class-migrations.php)",
       "Bash(/usr/local/bin/node --check /Applications/XAMPP/xamppfiles/htdocs/cmc-plugin/wp-content/plugins/cmc-cloner/assets/admin/js/admin.js)",
       "Bash(/Applications/XAMPP/xamppfiles/bin/php -l /Applications/XAMPP/xamppfiles/htdocs/cmc-plugin/wp-content/plugins/cmc-cloner/includes/class-size-guide.php)",
-      "WebFetch(domain:workoutstored.com)"
+      "WebFetch(domain:workoutstored.com)",
+      "Bash(/usr/bin/python3)"
     ],
     "additionalDirectories": [
       "/private/tmp",

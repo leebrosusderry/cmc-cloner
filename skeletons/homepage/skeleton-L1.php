@@ -6,8 +6,7 @@
  *   [1] Hero.Split          — 6/6 split, headline + lead + 2 CTAs / mood image
  *   [2] BrandStory.2col     — 6/6 split, image / heading + bullets
  *   [3] Featured Products   — [ux_products row, 8 items, 4 cols, popularity]
- *   [4] Testimonials.Grid3  — 3 static quote cards in one row
- *   [5] CTA.Flat            — full-width primary-tinted band, headline + 1 button
+ *   [4] CTA.Flat            — full-width primary-tinted band, headline + 1 button
  *
  * Token convention:
  *   {{TOKEN}}   — AI must fill this slot (do NOT leave the {{}} in output).
@@ -17,7 +16,6 @@
  *   .nt-l1-hero / .nt-l1-hero-media / .nt-l1-h1 / .nt-l1-lead / .nt-l1-cta-row
  *   .nt-l1-story / .nt-l1-story-media / .nt-l1-h2 / .nt-l1-bullets
  *   .nt-l1-featured
- *   .nt-l1-testimonials / .nt-l1-testimonial-card / .nt-l1-quote / .nt-l1-author
  *   .nt-l1-cta / .nt-l1-cta-headline / .nt-l1-cta-para
  *   .nt-eyebrow (shared kicker label)
  */
@@ -28,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 return [
     'id'   => 'L1',
-    'name' => 'Editorial Split — Hero.Split / BrandStory.2col / Featured / Testimonials.Grid3 / CTA.Flat',
+    'name' => 'Editorial Split — Hero.Split / BrandStory.2col / Featured / CTA.Flat',
 
     /*
      * Image budget — AI must research + supply each URL from Pexels/Unsplash
@@ -67,14 +65,6 @@ TXT,
                           Allowed: "Featured Products", "Studio Favorites", "This Season's Edit",
                           "Customer Favorites", "New Arrivals", "The Edit", "Studio Picks", "Browse the Range".
                           FORBIDDEN: brand names, fabricated collection names, descriptive product nouns.
-
-* {{TEST_HEADING}}     — 4-6 words. Section heading.
-* {{TEST_QUOTE_1}}     — 18-28 words. Customer voice 1. Distinct tone from quotes 2 + 3.
-* {{TEST_AUTHOR_1}}    — first name + city/country only. NEVER include surname or title.
-* {{TEST_QUOTE_2}}     — 18-28 words.
-* {{TEST_AUTHOR_2}}    — same rule.
-* {{TEST_QUOTE_3}}     — 18-28 words.
-* {{TEST_AUTHOR_3}}    — same rule.
 
 * {{CTA_HEADLINE}}     — 5-9 words.
 * {{CTA_PARA}}         — 12-20 words.
@@ -137,39 +127,6 @@ TXT,
 [/col]
 [/row]
 [ux_products type="row" products="8" columns="4" columns__md="3" columns__sm="2" orderby="popularity"]
-[/section]
-
-[section label="L1 Testimonials" padding="48px" padding__sm="28px" class="cmc-section nt-l1-testimonials"]
-[row]
-[col span="12"]
-<div class="nt-feat-heading"><h2 class="nt-l1-h2">{{TEST_HEADING}}</h2></div>
-[/col]
-[/row]
-
-[row]
-
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l1-testimonial-card">
-<p class="nt-l1-quote">"{{TEST_QUOTE_1}}"</p>
-<span class="nt-l1-author">— {{TEST_AUTHOR_1}}</span>
-</div>
-[/col]
-
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l1-testimonial-card">
-<p class="nt-l1-quote">"{{TEST_QUOTE_2}}"</p>
-<span class="nt-l1-author">— {{TEST_AUTHOR_2}}</span>
-</div>
-[/col]
-
-[col span="4" span__sm="12"]
-<div class="nt-testimonial-card nt-l1-testimonial-card">
-<p class="nt-l1-quote">"{{TEST_QUOTE_3}}"</p>
-<span class="nt-l1-author">— {{TEST_AUTHOR_3}}</span>
-</div>
-[/col]
-
-[/row]
 [/section]
 
 [section label="L1 CTA" padding="60px" padding__sm="32px" class="cmc-section nt-l1-cta"]
