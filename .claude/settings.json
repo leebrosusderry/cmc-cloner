@@ -95,7 +95,10 @@
       "Bash(/usr/local/bin/node --check /Applications/XAMPP/xamppfiles/htdocs/cmc-plugin/wp-content/plugins/cmc-cloner/assets/admin/js/admin.js)",
       "Bash(/Applications/XAMPP/xamppfiles/bin/php -l /Applications/XAMPP/xamppfiles/htdocs/cmc-plugin/wp-content/plugins/cmc-cloner/includes/class-size-guide.php)",
       "WebFetch(domain:workoutstored.com)",
-      "Bash(/usr/bin/python3)"
+      "Bash(/usr/bin/python3)",
+      "Bash(curl -s -A \"Mozilla/5.0\" https://frameloftshop.shop/about-us/ -o /tmp/about-us-live.html)",
+      "Bash(curl -s \"https://frameloftshop.shop/wp-content/plugins/cmc-cloner/assets/public/css/cloned.css?ver=0.9.14\" -o /tmp/cloned-live.css)",
+      "Bash(grep -n \"quote-card.*eyebrow\\\\|cmc-eyebrow {$\\\\|cmc-eyebrow,$\" /tmp/cloned-live.css)"
     ],
     "additionalDirectories": [
       "/private/tmp",

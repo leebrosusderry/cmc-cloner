@@ -1676,16 +1676,17 @@ body.cmc-skel-4 .cmc-cta-banner h3 {
 }
 
 /* CENTERED EYEBROW VARIANT (A): hairlines on BOTH sides, inline with text
-   (`─── EYEBROW ───`). Applies to centered hero eyebrows + the mission
-   quote-card eyebrow. Replaces the previous "lonely dash above" layout
-   that the operator screenshot flagged as disconnected.
+   (`─── EYEBROW ───`). Applies to hero eyebrows + values-head section
+   eyebrows. Quote-card eyebrow ("OUR MISSION", "QUICK REACH") is
+   intentionally EXCLUDED — it stays left-aligned with the single
+   leading hairline so the whole card body reads as a left-anchored
+   info block.
 
    Implementation: switch the eyebrow to flex so :before and :after lay
    out inline as fixed-width hairlines on either side of the text. Flex +
    gap keeps spacing balanced regardless of text length. */
 .cmc-about-hero .cmc-eyebrow,
 .cmc-contact-hero .cmc-eyebrow,
-.cmc-quote-card .cmc-eyebrow,
 .cmc-section .cmc-values-head .cmc-eyebrow {
     display: flex;
     align-items: center;
@@ -1698,8 +1699,6 @@ body.cmc-skel-4 .cmc-cta-banner h3 {
 .cmc-about-hero .cmc-eyebrow::after,
 .cmc-contact-hero .cmc-eyebrow::before,
 .cmc-contact-hero .cmc-eyebrow::after,
-.cmc-quote-card .cmc-eyebrow::before,
-.cmc-quote-card .cmc-eyebrow::after,
 .cmc-section .cmc-values-head .cmc-eyebrow::before,
 .cmc-section .cmc-values-head .cmc-eyebrow::after {
     content: "";
@@ -1716,6 +1715,37 @@ body.cmc-skel-4 .cmc-cta-banner h3 {
 .cmc-cta-banner .cmc-eyebrow::before,
 .cmc-cta-banner .cmc-eyebrow::after {
     background: rgba(255, 255, 255, 0.65);
+}
+
+/* Reset quote-card eyebrow back to LEFT default when it lives INSIDE a
+   hero section (skeleton-2's split hero puts the mission/contact quote
+   card in the same .cmc-about-hero / .cmc-contact-hero section as the
+   H1). The descendant combinator `.cmc-about-hero .cmc-eyebrow` above
+   would otherwise catch nested quote-card eyebrows and re-apply the
+   centered bracket layout meant only for the hero's own eyebrow. */
+.cmc-about-hero .cmc-quote-card .cmc-eyebrow,
+.cmc-contact-hero .cmc-quote-card .cmc-eyebrow {
+    display: inline-block;
+    justify-content: flex-start;
+    gap: 0;
+    text-align: left;
+}
+
+.cmc-about-hero .cmc-quote-card .cmc-eyebrow::before,
+.cmc-contact-hero .cmc-quote-card .cmc-eyebrow::before {
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    margin: 0 10px 0 0;
+    flex: none;
+    vertical-align: middle;
+    transform: translateY(-2px);
+}
+
+.cmc-about-hero .cmc-quote-card .cmc-eyebrow::after,
+.cmc-contact-hero .cmc-quote-card .cmc-eyebrow::after {
+    display: none;
+    content: none;
 }
 
 /* ---------- (G) Hero contact chips — primary border + hover fill ---------- */
@@ -1780,22 +1810,22 @@ body.cmc-skel-4 .cmc-cta-banner h3 {
     justify-content: center;
 }
 
-/* Mission / contact quote-card content centering.
-   The decorative `"` glyph on `.cmc-quote-card::before` stays anchored
-   top-left as an editorial corner accent — that's intentional, common
-   pattern for testimonial / pull-quote cards. */
-.cmc-quote-card,
+/* Mission / contact quote-card content LEFT-aligned.
+   Only the eyebrow stays centered (with bracket hairlines from the
+   Phase 1 selector block above). The heading + body + divider read
+   left so the information (address, hours, "What we stand for"
+   paragraph) feels like a normal information block, not a centered
+   pull quote.
+   The decorative `"` glyph on `.cmc-quote-card::before` is already
+   anchored top-left and stays there as an editorial corner accent. */
 .cmc-quote-card h2,
 .cmc-quote-card h3,
 .cmc-quote-card p,
 .cmc-quote-card .cmc-quote-card__divider {
-    text-align: center;
+    text-align: left;
 }
 
-/* `cmc-quote-card__divider` (used in contact skeleton-2) is a horizontal
-   hairline — centering its text-align is harmless but we also want the
-   hairline element itself centered if it relies on margin-auto. */
 .cmc-quote-card .cmc-quote-card__divider {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 0;
 }
