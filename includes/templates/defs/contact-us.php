@@ -44,7 +44,7 @@ STRICT RULES
 - PRESERVE VERBATIM: the LAYOUT SKELETON contains one <div class="cmc-contact-form-mount" data-mailto="[email-web]"></div> marker. Copy this <div> tag into your output unchanged — same tag, same class, same data-mailto attribute, empty body. Do NOT replace it with a real <form>, do NOT add child elements, do NOT remove it. The front-end hydrates it into a working contact form at runtime.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. MAY include {{ten_web}} for brand voice (e.g. "Contact {{ten_web}}", "Get in Touch with {{ten_web}}") OR use a generic friendly title (e.g. "Contact Us", "Get in Touch", "We're Here to Help"). NEVER include {{ten_doanh_nghiep}} — the legal entity name does not belong in an H1 ("Contact <LLC name>" reads corporate-cold and confuses customers who shop the brand). The LLC name is disclosed in Section 2 (Business Information) per the rule above; that is its only place on this page.
 - {{INTRO}} — section 1 body (Welcome Message). One short paragraph inviting contact. Drop in the store name naturally.
 - {{RESPONSE_TIME}} — section 4 body (Expected Response Time). One short line stating messages are answered {{response_time}}. Do NOT duplicate the literal "{{response_time}}" variable — use the resolved phrase in a full sentence.
 - {{ORDER_HELP}} — one short paragraph telling customers to email for help with an existing order. Emphasize email, never mention contact forms.

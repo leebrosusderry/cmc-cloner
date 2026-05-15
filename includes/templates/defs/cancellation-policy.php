@@ -70,7 +70,7 @@ STRICT RULES (GMC compliance)
 - Keep examples industry-appropriate for {{nganh_hang}}.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic policy name only (e.g. "Cancellation Policy", "Order Cancellations"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — name disclosure belongs in body sections per their respective rules. An H1 like "<LLC name> Cancellation Policy" reads corporate-cold; a clean "Cancellation Policy" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph stating that this page covers cancellations of orders not yet dispatched, with the cut-off being {{shipping_cutoff_time}} on the dispatch day.
 - {{OVERVIEW}} — section 1 body (Overview). What the policy covers and who may cancel.
 - {{CANCEL_WINDOW}} — section 2 body (Cancellation Window). MUST literally include "before {{shipping_cutoff_time}} on the dispatch day" — preserve timezone in the cut-off — and the once-dispatched → Return & Refund Policy hand-off.

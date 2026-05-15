@@ -43,7 +43,7 @@ STRICT RULES
 - Rewrite wording — do not copy sentences verbatim from the source.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period (e.g. "Track Your Order").
+- {{HEADING}} — page H1. 3–8 words, no trailing period (e.g. "Track Your Order", "Order Tracking", "Where's My Order?"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — keep the title generic so the tracking form below reads as a clean utility page. Brand voice belongs in the body if needed.
 - {{INTRO}} — exactly one short sentence inviting the customer to use the form below. No list, no multi-paragraph intro.
 - If the source is rich, still keep this page minimal: everything else goes on Shipping Policy or FAQ.
 

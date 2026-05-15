@@ -40,7 +40,7 @@ STRICT RULES
 - Rewrite wording; do not copy sentences verbatim.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic policy name only (e.g. "Cookie Policy", "Cookies"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — name disclosure belongs in body sections per their respective rules. An H1 like "<LLC name> Cookie Policy" reads corporate-cold; a clean "Cookie Policy" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph.
 - {{OVERVIEW}} — section 1 body (Overview). What cookies are and why this site uses them.
 - {{COOKIE_TYPES}} — section 2 body. Strictly necessary / functional / analytics / advertising, 1–2 sentences each.

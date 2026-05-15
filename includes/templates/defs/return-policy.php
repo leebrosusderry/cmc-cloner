@@ -77,7 +77,7 @@ STRICT RULES (GMC compliance)
 - Examples must suit a {{nganh_hang}} store.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period. Must reflect this is a combined "Return & Refund Policy" page (e.g. "Return & Refund Policy", "Returns and Refunds").
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Must reflect this is a combined "Return & Refund Policy" page (e.g. "Return & Refund Policy", "Returns and Refunds"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — liability disclosure (which MUST name {{ten_doanh_nghiep}} as the party covering return shipping and issuing refunds) lives in the body sections per the GMC RETURN STANDARDS rule above. A clean "Return & Refund Policy" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph. MUST mention United States, {{return_window}} return window, prepaid return label at no cost to the customer, and refunds to the original payment method.
 - {{OVERVIEW}} — section 1 body (Overview). Use the GMC RETURN STANDARDS values in a natural paragraph. Explicitly state this page covers BOTH returns and refunds.
 - {{ELIGIBILITY}} — section 2 body (Return Eligibility). Write as full sentences (no 2-3 word fragments / table-cell labels). Must convey: only new, unused products in their original packaging with all tags attached are accepted; items showing signs of use or damage are not eligible; both defective and non-defective products are accepted.

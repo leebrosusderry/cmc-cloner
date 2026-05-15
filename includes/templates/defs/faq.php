@@ -118,7 +118,7 @@ STRICT RULES (GMC compliance)
 - Clear, professional English. Rewrite wording; do not copy sentences verbatim from the source.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below is either the page header or one side of a Q/A pair — do NOT swap content across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic friendly title only (e.g. "Frequently Asked Questions", "FAQ", "Help Center FAQ", "Common Questions"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — FAQ is customer-facing but the heading itself should be generic and instantly recognisable. A clean "Frequently Asked Questions" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph.
 - {{Q_ORDER_*}} — questions in the Orders & Checkout category. Use the shopper's voice, end with "?".
 - {{A_ORDER_*}} — matching answers, 1–4 sentences, factual. MUST cover cancelling-before-dispatch in at least one slot, referencing the {{shipping_cutoff_time}} cut-off (with timezone preserved) and pointing to the Cancellation Policy page.

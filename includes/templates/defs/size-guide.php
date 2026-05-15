@@ -57,7 +57,7 @@ STRICT RULES
 - Use {{ten_web}} for the store name; never copy the source page's store name.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON must be filled exactly per these rules)
-- {{HEADING}} — page H1, 3 to 5 words, no trailing period. Examples: "Size Guide", "Size Chart and Fit Guide", "Sizing Information", "How to Find Your Size".
+- {{HEADING}} — page H1, 3 to 5 words, no trailing period. Examples: "Size Guide", "Size Chart and Fit Guide", "Sizing Information", "How to Find Your Size". NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — keep the title generic so the static size chart below reads as universal reference data, not branded copy.
 - {{INTRO}} — 2 to 3 short sentences (≈40–70 words). Position the chart below as a general reference. State that it covers most everyday items in our line-up, and that customers who fall between sizes should choose the larger size for a more relaxed fit. Use {{ten_web}} naturally once. Plain prose, no lists.
 - {{OUTRO}} — 1 to 2 short sentences (≈25–40 words). Tell customers the best way to measure themselves (soft tape, over light clothing, snug but not tight), and that they can email {{email_web}} with any sizing question. Plain prose, no lists.
 

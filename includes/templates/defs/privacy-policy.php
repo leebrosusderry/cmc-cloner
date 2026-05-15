@@ -67,7 +67,7 @@ STRICT RULES
 - Rewrite wording; do not copy sentences verbatim.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic policy name only (e.g. "Privacy Policy", "Privacy Notice"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — the data-controller disclosure (which MUST name {{ten_doanh_nghiep}} for GDPR/CCPA compliance) lives in the Overview + Contact body sections per the DATA CONTROLLER DISCLOSURE rule above. An H1 like "<LLC name> Privacy Policy" reads corporate-cold; a clean "Privacy Policy" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph.
 - {{OVERVIEW}} — section 1 body (Overview). The Effective Date paragraph is already rendered by the skeleton immediately above this slot, so DO NOT include any "Effective Date:" / "Last Updated:" / "As of:" line here. Start directly with 1–2 plain sentences stating who the policy applies to and the scope of data activities it covers, followed by the data-controller disclosure sentence. NO date, month, year, or version number anywhere in this slot — even if the source page has one.
 - {{INFO_COLLECTED}} — section 2 body (Information We Collect). Personal data + automatic data.

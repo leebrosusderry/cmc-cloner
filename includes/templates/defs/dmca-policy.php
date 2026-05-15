@@ -41,7 +41,7 @@ STRICT RULES
 - This is not legal advice; do not imply it is.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic policy name only (e.g. "DMCA Notice", "DMCA Policy", "Copyright Policy"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — the designated-agent / legal-entity disclosure belongs in the body per the rules above. A clean "DMCA Notice" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph.
 - {{OVERVIEW}} — section 1 body (Overview). Short paragraph using {{ten_doanh_nghiep}}.
 - {{RIGHTS}} — section 2 body (Rights of Copyright Holders). Who may submit a notice.

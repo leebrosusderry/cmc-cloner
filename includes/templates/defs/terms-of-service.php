@@ -61,7 +61,7 @@ STRICT RULES
 - Rewrite wording; do not copy sentences verbatim.
 
 SLOT MAP (every {{PLACEHOLDER}} in the LAYOUT SKELETON below must be filled with the content described here — do NOT swap topics across slots)
-- {{HEADING}} — page H1. 3–8 words, no trailing period.
+- {{HEADING}} — page H1. 3–8 words, no trailing period. Use a generic policy name only (e.g. "Terms of Service", "Terms and Conditions"). NEVER include either {{ten_web}} OR {{ten_doanh_nghiep}} in the H1 — the contract-party disclosure (which MUST name {{ten_doanh_nghiep}} as the binding-contract party) lives in the body sections per the Orders & Acceptance rule above. A clean "Terms of Service" is GMC-standard.
 - {{INTRO}} — 1–2 sentences lead paragraph.
 - {{ACCEPTANCE}} — section 1 body (Acceptance of Terms). MUST begin with the literal line "Effective Date: {{effective_date}}" on its own paragraph (no surrounding commentary, no "as of", no "Last revised"), then a blank line, then a short sentence stating that using or accessing the site constitutes acceptance of these terms.
 - {{ELIGIBILITY}} — section 2 body (Eligibility). Minimum age and legal capacity.
